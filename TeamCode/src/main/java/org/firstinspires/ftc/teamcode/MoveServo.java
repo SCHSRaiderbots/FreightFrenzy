@@ -9,8 +9,8 @@ import org.firstinspires.ftc.robotcontroller.external.samples.BasicOpMode_Linear
 @TeleOp
 public class MoveServo extends OpMode {
     Servo myServo;
-    public double open = 0.4;
-    public double close = 0.0;
+    public double open = 0.925;
+    public double close = 0.3;
 
 
     @Override
@@ -18,7 +18,10 @@ public class MoveServo extends OpMode {
         myServo = hardwareMap.get(Servo.class, "myServo");
         myServo.setPosition(close);
     }
+
+    @Override
     public void loop(){
+        telemetry.addData("Servo", "position "+myServo.getPosition());
         if (gamepad1.a){
             myServo.setPosition(open);
         }
