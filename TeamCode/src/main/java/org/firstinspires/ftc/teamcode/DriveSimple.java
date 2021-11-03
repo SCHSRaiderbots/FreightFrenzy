@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-@TeleOp(name="simple", group="simple group")
+@TeleOp(name="DriveSimple", group="simple group")
 public class DriveSimple extends LinearOpMode {
     DcMotorEx motorLeft;
     DcMotorEx motorRight;
