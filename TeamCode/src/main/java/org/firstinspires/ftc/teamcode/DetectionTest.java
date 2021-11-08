@@ -29,7 +29,7 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.List;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -48,8 +48,8 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@TeleOp(name = "Object Detection Webcam", group = "Concept")
-public class DetectionTest extends LinearOpMode {
+@TeleOp(name = "Object Detector", group = "CodeDev")
+public class DetectionTest extends OpMode {
     /* Note: This sample uses the all-objects Tensor Flow model (FreightFrenzy_BCDM.tflite), which contains
      * the following 4 detectable objects
      *  0: Ball,
@@ -97,7 +97,7 @@ public class DetectionTest extends LinearOpMode {
     private TFObjectDetector tfod;
 
     @Override
-    public void runOpMode() {
+    public void init() {
         // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
         // first.
         initVuforia();
@@ -116,37 +116,59 @@ public class DetectionTest extends LinearOpMode {
             // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
             // should be set to the value of the images used to create the TensorFlow Object Detection model
             // (typically 16/9).
-            tfod.setZoom(1.25, 16.0/9.0);
+            tfod.setZoom(1.25, 16.0 / 9.0);
         }
 
         /* Wait for the game to begin */
         telemetry.addData(">", "Press Play to start op mode");
         telemetry.update();
-        waitForStart();
+    }
 
-        if (opModeIsActive()) {
-            while (opModeIsActive()) {
-                if (tfod != null) {
-                    // getUpdatedRecognitions() will return null if no new information is available since
-                    // the last time that call was made.
-                    List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-                    if (updatedRecognitions != null) {
-                        telemetry.addData("# Object Detected", updatedRecognitions.size());
-                        // step through the list of recognitions and display boundary info.
-                        int i = 0;
-                        for (Recognition recognition : updatedRecognitions) {
-                            telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
-                            telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
-                                    recognition.getLeft(), recognition.getTop());
-                            telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
-                                    recognition.getRight(), recognition.getBottom());
-                            i++;
-                        }
-                        telemetry.update();
-                    }
+    @Override
+    public void init_loop() {
+        // we are in init...
+
+        // if we have an object detector
+        if (tfod != null) {
+            // getUpdatedRecognitions() will return null if no new information is available since
+            // the last time that call was made.
+            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+
+            // if we have new recognition information...
+            if (updatedRecognitions != null) {
+                // report the number of objects detected.
+                telemetry.addData("# Object Detected", updatedRecognitions.size());
+
+                // step through the list of recognitions and display boundary info.
+                for (Recognition recognition : updatedRecognitions) {
+                    telemetry.addData(recognition.getLabel(),
+                            String.format("(%.01f, %.01f) (%.01f, %.01f) %.03f",
+                                    recognition.getLeft(), recognition.getTop(),
+                                    recognition.getRight(), recognition.getBottom(),
+                                    recognition.getConfidence()));
                 }
+                telemetry.update();
             }
         }
+    }
+
+    @Override
+    public void start() {
+        if (tfod != null) {
+            // we have an object detector, but we do not need it anymore...
+            // init() should have determined the barcode
+            tfod.deactivate();
+        }
+    }
+
+    @Override
+    public void loop() {
+        telemetry.addData("recognition", "should be off.");
+    }
+
+    @Override
+    public void stop() {
+        // Nothing to do
     }
 
     /**
