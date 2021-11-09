@@ -4,13 +4,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.BasicOpMode_Linear;
-
 @TeleOp
 public class MoveServo extends OpMode {
     Servo myServo;
-    public double open = 0.925;
-    public double close = 0.3;
+    public final double open = 0.925;
+    public final double close = 0.3;
 
 
     @Override
