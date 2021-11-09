@@ -32,6 +32,8 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.List;
+import java.util.Locale;
+
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
@@ -68,6 +70,8 @@ public class DetectionTest extends OpMode {
             "Duck",
             "Marker"
     };
+
+    private final Locale locale = null;
 
     /*
      * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
@@ -142,7 +146,7 @@ public class DetectionTest extends OpMode {
                 // step through the list of recognitions and display boundary info.
                 for (Recognition recognition : updatedRecognitions) {
                     telemetry.addData(recognition.getLabel(),
-                            String.format("(%.01f, %.01f) (%.01f, %.01f) %.03f",
+                            String.format(locale, "(%.01f, %.01f) (%.01f, %.01f) %.03f",
                                     recognition.getLeft(), recognition.getTop(),
                                     recognition.getRight(), recognition.getBottom(),
                                     recognition.getConfidence()));
