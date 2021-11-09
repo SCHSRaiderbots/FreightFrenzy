@@ -122,10 +122,6 @@ public class DetectionTest extends OpMode {
             // (typically 16/9).
             tfod.setZoom(1.25, 16.0 / 9.0);
         }
-
-        /* Wait for the game to begin */
-        telemetry.addData(">", "Press Play to start op mode");
-        telemetry.update();
     }
 
     @Override
@@ -151,7 +147,9 @@ public class DetectionTest extends OpMode {
                                     recognition.getRight(), recognition.getBottom(),
                                     recognition.getConfidence()));
                 }
-                telemetry.update();
+
+                // OpMode time advances during init_loop()
+                telemetry.addData("time", "%.03f seconds", time);
             }
         }
     }
@@ -167,6 +165,9 @@ public class DetectionTest extends OpMode {
 
     @Override
     public void loop() {
+        // OpMode time advances during loop()
+        telemetry.addData("time", "%.03f seconds", time);
+
         telemetry.addData("recognition", "should be off.");
     }
 
