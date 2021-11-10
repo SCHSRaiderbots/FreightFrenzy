@@ -9,8 +9,8 @@ import java.util.Locale;
 
 @TeleOp(name="DriveSimple", group="CodeDev")
 public class DriveSimple extends OpMode {
-    DcMotorEx motorLeft;
-    DcMotorEx motorRight;
+    DcMotorEx motorLeft = null;
+    DcMotorEx motorRight = null;
 
     @Override
     public void init() {
@@ -22,19 +22,40 @@ public class DriveSimple extends OpMode {
         motorLeft.setDirection(DcMotorSimple.Direction.FORWARD);
         motorRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        // Odometry
+        Motion.setRobotMotors(motorLeft, motorRight);
+        Motion.setRobotDims2018();
+        Motion.setPoseInches(0.0, 0.0, 0.0);
+
         telemetry.addData("Drive motors", "initialized");
     }
 
     @Override
     public void init_loop() {
+        // Odometry
+        Motion.updateRobotPose();
+
+        // report position
+        telemetry.addData("position",
+                String.format((Locale)null, "%6.01f %6.01f %6.01f",
+                        Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees));
     }
 
     @Override
     public void start() {
+        // Odometry
+        Motion.updateRobotPose();
     }
 
     @Override
     public void loop() {
+        // Odometry
+        Motion.updateRobotPose();
+
+        // report position
+        telemetry.addData("position",
+                String.format((Locale)null, "%6.01f %6.01f %6.01f",
+                        Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees));
 
         // value for conversion
         final double power = 1.0;
