@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -18,6 +20,10 @@ public class DriveSimple extends OpMode {
         motorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
         motorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
 
+        // TODO: may be able to fix some HD gearing issues.
+        Log.d("gearing Left", String.valueOf(motorLeft.getMotorType().getGearing()));
+        Log.d("gearing right", String.valueOf(motorRight.getMotorType().getGearing()));
+
         // set the motor directions
         motorLeft.setDirection(DcMotorSimple.Direction.FORWARD);
         motorRight.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -27,6 +33,7 @@ public class DriveSimple extends OpMode {
         Motion.setRobotDims2018();
         Motion.setPoseInches(0.0, 0.0, 0.0);
 
+        // report the initialization
         telemetry.addData("Drive motors", "initialized");
     }
 
