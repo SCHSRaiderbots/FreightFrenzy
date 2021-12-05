@@ -65,15 +65,15 @@ public class DriveSimple extends OpMode {
                         Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees));
 
         // value for conversion
-        final double power = 1.0;
+        final double power = 2000.0;
 
         // get the operator commands
-        double powerLeft = gamepad1.left_stick_y * power;
-        double powerRight = gamepad1.right_stick_y * power;
+        double powerLeft = -gamepad1.left_stick_y * power;
+        double powerRight = -gamepad1.right_stick_y * power;
 
         // set the motor power levels
-        motorLeft.setPower(powerLeft);
-        motorRight.setPower(powerRight);
+        motorLeft.setVelocity(powerLeft);
+        motorRight.setVelocity(powerRight);
 
         // report the power levels
         telemetry.addData("Drive motors", String.format((Locale)null, "%.03f %.03f", powerLeft, powerRight));
