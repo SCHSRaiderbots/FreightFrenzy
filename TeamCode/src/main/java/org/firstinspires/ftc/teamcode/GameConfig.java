@@ -14,24 +14,24 @@ public class GameConfig {
     // define the autonomous options
     // we could put properties on the locations
     public enum Alliance {RED, BLUE}
-    public enum StartLocation {AUDIENCE, WAREHOUSE}
-    public enum EndLocation {WAREHOUSE_INNER, WAREHOUSE_OUTER, STORAGE_UNIT}
+    public enum LocationStart {AUDIENCE, WAREHOUSE}
+    public enum LocationEnd {WAREHOUSE_INNER, WAREHOUSE_OUTER, STORAGE_UNIT}
 
     // set the default options
     // These are static and should continue across op mode selections
     public static Alliance alliance = Alliance.RED;
-    public static StartLocation startLocation = StartLocation.AUDIENCE;
-    public static EndLocation endLocation = EndLocation.WAREHOUSE_INNER;
+    public static LocationStart locationStart = LocationStart.AUDIENCE;
+    public static LocationEnd locationEnd = LocationEnd.WAREHOUSE_INNER;
 
     // remember gamepad state so we can detect transitions
     static private boolean bAlliance = false;
-    static private boolean bStartLocation = false;
-    static private boolean bEndLocation = false;
+    static private boolean bLocationStart = false;
+    static private boolean bLocationEnd = false;
 
     static void init(Gamepad gamepad1) {
         bAlliance=false;
-        bStartLocation = false;
-        bEndLocation = false;
+        bLocationStart = false;
+        bLocationEnd = false;
     }
 
     static void init_loop(Gamepad gamepad1) {
@@ -47,47 +47,47 @@ public class GameConfig {
             bAlliance = false;
         }
 
-        // gamepad1.b sets the StartLocation
+        // gamepad1.b sets the Starting Location
         if (gamepad1.b) {
             // b button pressed
-            if (!bStartLocation) {
-                startLocation = (startLocation == StartLocation.AUDIENCE) ? StartLocation.WAREHOUSE : StartLocation.AUDIENCE;
-                bStartLocation = true;
+            if (!bLocationStart) {
+                locationStart = (locationStart == LocationStart.AUDIENCE) ? LocationStart.WAREHOUSE : LocationStart.AUDIENCE;
+                bLocationStart = true;
             }
         } else {
             // b button not pressed
-            bStartLocation = false;
+            bLocationStart = false;
         }
 
-        // gamepad1.x sets the EndLocation
+        // gamepad1.x sets the Ending Location
         if (gamepad1.x) {
             // x button is pressed
-            if (!bEndLocation) {
-                switch (endLocation) {
+            if (!bLocationEnd) {
+                switch (locationEnd) {
                     case WAREHOUSE_INNER:
-                        endLocation = EndLocation.WAREHOUSE_OUTER;
+                        locationEnd = LocationEnd.WAREHOUSE_OUTER;
                         break;
                     case WAREHOUSE_OUTER:
-                        endLocation = EndLocation.STORAGE_UNIT;
+                        locationEnd = LocationEnd.STORAGE_UNIT;
                         break;
                     default:
                     case STORAGE_UNIT:
-                        endLocation = EndLocation.WAREHOUSE_INNER;
+                        locationEnd = LocationEnd.WAREHOUSE_INNER;
                         break;
                 }
                 // button was pressed
-                bEndLocation = true;
+                bLocationEnd = true;
             }
         } else {
             // x button is not pressed
-            bEndLocation = false;
+            bLocationEnd = false;
         }
     }
 
     static void report(Telemetry telemetry) {
         // report the configuration
         telemetry.addData("Alliance  (a)", alliance);
-        telemetry.addData("Start Loc (b)", startLocation);
-        telemetry.addData("End Loc   (x)", endLocation);
+        telemetry.addData("Start Loc (b)", locationStart);
+        telemetry.addData("End Loc   (x)", locationEnd);
     }
 }
