@@ -271,4 +271,34 @@ public class Motion {
         thetaPoseDegrees = theta;
     }
 
+    static void moveMeters(double m) {
+        double ticksLeft = m / distpertickLeft;
+        double ticksRight = m / distpertickRight;
+
+        dcmotorLeft.setTargetPosition(cEncoderLeft+(int)ticksLeft);
+        dcmotorRight.setTargetPosition(cEncoderRight+(int)ticksRight);
+    }
+
+    /**
+     * Move straight ahead a particular distance
+     * @param in - distance in inches
+     */
+    static void moveInches(double in) {
+        moveMeters(in * 0.0254);
+    }
+
+    /**
+     * Turn a relative angle
+     * @param deg - angle in degrees
+     */
+    static void turn(double deg) {
+        double radians = deg * (Math.PI / 180.0);
+        double dist = radians * distWheel;
+        double ticksLeft = dist / distpertickLeft;
+        double ticksRight = -dist / distpertickRight;
+
+        dcmotorLeft.setTargetPosition(cEncoderLeft+(int)ticksLeft);
+        dcmotorRight.setTargetPosition(cEncoderRight+(int)ticksRight);
+    }
+
 }

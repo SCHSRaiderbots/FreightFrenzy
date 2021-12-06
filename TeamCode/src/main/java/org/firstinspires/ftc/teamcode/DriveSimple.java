@@ -78,18 +78,10 @@ public class DriveSimple extends OpMode {
         motorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
         motorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
 
+        LogDevice.dump("motorLeft", motorLeft);
+        LogDevice.dump("motorRight", motorRight);
+
         // TODO: may be able to fix some HD gearing issues.
-        // REV Robotics Core Hex Motor
-        Log.d("motor type", motorLeft.getMotorType().getName());
-        // ticks reported as 288.0 (REV says 4 ticks/motorRev times 72)
-        Log.d("motor ticks", String.valueOf(motorLeft.getMotorType().getTicksPerRev()));
-        // max RPM 137.0 (documents say 125 RPM)
-        Log.d("motor rpm", String.valueOf(motorLeft.getMotorType().getMaxRPM()));
-        // achievable ticks/second 558.9599999999
-        Log.d("motor achievable ticks/sec", String.valueOf(motorLeft.getMotorType().getAchieveableMaxTicksPerSecond()));
-        // gearing reported as 36.25!
-        Log.d("gearing Left", String.valueOf(motorLeft.getMotorType().getGearing()));
-        Log.d("gearing right", String.valueOf(motorRight.getMotorType().getGearing()));
 
         // set the motor directions
         motorLeft.setDirection(DcMotorSimple.Direction.REVERSE);

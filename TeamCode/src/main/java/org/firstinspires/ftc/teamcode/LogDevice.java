@@ -70,6 +70,20 @@ class LogDevice {
         // first dump the ancestor
         dump(name, (DcMotor)motor);
 
+        // Want details about the motor type...
+        // These values scare me a bit: does each motor get its own instance of a motor type?
+        // Or do all Ultraplanetary motors share the same motor type?
+        //   here is some data from a REV Robotics Core Hex Motor
+        Log.d("    motor type", motor.getMotorType().getName());
+        // ticks reported as 288.0 (REV says 4 ticks/motorRev times 72)
+        Log.d("    motor ticks", String.valueOf(motor.getMotorType().getTicksPerRev()));
+        // max RPM 137.0 (documents say 125 RPM)
+        Log.d("    motor rpm", String.valueOf(motor.getMotorType().getMaxRPM()));
+        // achievable ticks/second 558.9599999999
+        Log.d("    motor achievable ticks/sec", String.valueOf(motor.getMotorType().getAchieveableMaxTicksPerSecond()));
+        // gearing reported as 36.25!
+        Log.d("    gearing", String.valueOf(motor.getMotorType().getGearing()));
+
         // (dcMotorEx) tolerance is 5 ticks.
         Log.d(TAG, "    TargetPositionTolerance = " + motor.getTargetPositionTolerance());
 

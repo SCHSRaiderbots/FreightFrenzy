@@ -73,8 +73,13 @@ public class AutoSimple extends OpMode {
         timeStart = time;
 
         // TODO: put in Motion...
-        motorLeft.setTargetPosition(motorLeft.getCurrentPosition() + 288 * 2);
-        motorRight.setTargetPosition(motorRight.getCurrentPosition() + 288 * 2);
+        // motorLeft.setTargetPosition(motorLeft.getCurrentPosition() + 288 * 4);
+        // motorRight.setTargetPosition(motorRight.getCurrentPosition() + 288 * 4);
+        // On standard field, I went 112.5 cm
+        // expected 4 * pi * 9.0 cm = 113
+        // Motion.moveInches(5.0);
+
+        Motion.turn(90);
     }
 
     @Override
@@ -84,8 +89,10 @@ public class AutoSimple extends OpMode {
 
         // does nothing
         telemetry.addData("time", "%8.3f", 30.0 - (time-timeStart));
-        telemetry.addData("pos ", "x: %8.1f, y: %8.1f, theta %8.1f",
+        telemetry.addData("pos (in)", "x: %8.1f, y: %8.1f, theta %8.1f",
                 Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees);
+        telemetry.addData("pos (m) ", "x: %8.3f, y: %8.3f, theta %8.1f",
+                Motion.xPose, Motion.yPose, Motion.thetaPoseDegrees);
     }
 
     @Override
