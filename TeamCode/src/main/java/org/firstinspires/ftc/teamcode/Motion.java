@@ -255,9 +255,9 @@ public class Motion {
 
     /***
      * Set the current robot pose
-     * @param x - robot x position in inches
-     * @param y - robot y position in inches
-     * @param theta - robot orientation in degrees
+     * @param x robot x position in inches
+     * @param y robot y position in inches
+     * @param theta robot orientation in degrees
      */
     static void setPoseInches(double x, double y, double theta) {
         // convert inches to meters, degrees to radians, and set state variables
@@ -271,34 +271,114 @@ public class Motion {
         thetaPoseDegrees = theta;
     }
 
-    static void moveMeters(double m) {
-        double ticksLeft = m / distpertickLeft;
-        double ticksRight = m / distpertickRight;
+    static double getMotorToleranceMeters() {
+        return dcmotorLeft.getTargetPositionTolerance() * distpertickLeft;
+    }
 
-        dcmotorLeft.setTargetPosition(cEncoderLeft+(int)ticksLeft);
-        dcmotorRight.setTargetPosition(cEncoderRight+(int)ticksRight);
+    static double getMotorToleranceInches() {
+        return getMotorToleranceMeters() / 0.0254 ;
+    }
+
+    static void setMotorToleranceMeters(double m) {
+        int ticksLeft = (int)(m / distpertickLeft);
+        int ticksRight = (int)(m / distpertickRight);
+
+        dcmotorLeft.setTargetPositionTolerance(ticksLeft);
+        dcmotorRight.setTargetPositionTolerance(ticksRight);
+    }
+
+    static void setMotorToleranceInches(double inch) {
+        // convert inches to meters and set the tolerance
+        setMotorToleranceMeters(inch * 0.0254);
+    }
+
+    /**
+     * Move the left and right motors a particular distance
+     * @param mLeft distance to move left motor in meters
+     * @param mRight distance to move right motor in meters
+     */
+    static void moveMotorsMeters(double mLeft, double mRight) {
+        // convert distance to motor ticks
+        int ticksLeft = (int)(mLeft / distpertickLeft);
+        int ticksRight = (int)(mRight / distpertickRight);
+
+        dcmotorLeft.setTargetPosition(cEncoderLeft + ticksLeft);
+        dcmotorRight.setTargetPosition(cEncoderRight + ticksRight);
+    }
+
+    /**
+     * Move the left and right motors a particular distance
+     * @param inLeft distance to move the left motor in inches
+     * @param inRight distance to move the right motor in inches
+     */
+    static void moveMotorsInches(double inLeft, double inRight) {
+        moveMotorsMeters(inLeft * 0.0254, inRight * 0.0254);
     }
 
     /**
      * Move straight ahead a particular distance
-     * @param in - distance in inches
+     * @param m distance in meters
+     */
+    static void moveMeters(double m) {
+        moveMotorsMeters(m, m);
+    }
+
+    /**
+     * Move straight ahead a particular distance
+     * @param in distance in inches
      */
     static void moveInches(double in) {
+        // convert inches to meters and call moveMeters()
         moveMeters(in * 0.0254);
     }
 
     /**
      * Turn a relative angle
-     * @param deg - angle in degrees
+     * @param radians angle in radians
      */
-    static void turn(double deg) {
-        double radians = deg * (Math.PI / 180.0);
+    static void turnRadians(double radians) {
+        // multiply by the radius in meters to get the circumferential distance
         double dist = radians * distWheel;
-        double ticksLeft = dist / distpertickLeft;
-        double ticksRight = -dist / distpertickRight;
+        // command the motors
+        moveMotorsMeters(dist, -dist);
+    }
 
-        dcmotorLeft.setTargetPosition(cEncoderLeft+(int)ticksLeft);
-        dcmotorRight.setTargetPosition(cEncoderRight+(int)ticksRight);
+    /**
+     * Turn an angle in degrees
+     * @param degrees angle to turn in degrees
+     */
+    static void turn(double degrees) {
+        // convert degrees to radians
+        double radians = degrees * (Math.PI / 180.0);
+        // command the turn
+        turnRadians(radians);
+    }
+
+    /**
+     * Calculate the heading from the current position to (x, y) in inches
+     * @param x x coordinate in inches
+     * @param y y coordinate in inches
+     * @return heading angle in radians
+     */
+    static double headingInches(double x, double y) {
+        double inchDX = x - xPoseInches;
+        double inchDY = y - yPoseInches;
+
+        return Math.atan2(inchDY, inchDX);
+    }
+
+    /**
+     * Point the robot to the position (x, y) in inches
+     * @param x y coordinate in inches
+     * @param y y coordinate in inches
+     */
+    static void headTowardInches(double x, double y) {
+        // get the heading
+        double heading = headingInches(x, y);
+        // calculate the relative turn
+        double radianTurn = heading - thetaPose;
+        // execute the turn
+        turnRadians(radianTurn);
     }
 
 }
