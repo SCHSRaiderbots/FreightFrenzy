@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
 /**
  * This class consolidates some of the robot motion calculations.
  * It uses static methods because there is only one physical robot.
@@ -271,14 +273,26 @@ public class Motion {
         thetaPoseDegrees = theta;
     }
 
+    /**
+     * Get the current position tolerance in meters
+     * @return tolerance in meters
+     */
     static double getMotorToleranceMeters() {
         return dcmotorLeft.getTargetPositionTolerance() * distpertickLeft;
     }
 
+    /**
+     * Get the current position tolerance in inches
+     * @return tolerance in inches
+     */
     static double getMotorToleranceInches() {
         return getMotorToleranceMeters() / 0.0254 ;
     }
 
+    /**
+     * Set the position tolerance
+     * @param m tolerance in meters
+     */
     static void setMotorToleranceMeters(double m) {
         int ticksLeft = (int)(m / distpertickLeft);
         int ticksRight = (int)(m / distpertickRight);
@@ -287,9 +301,22 @@ public class Motion {
         dcmotorRight.setTargetPositionTolerance(ticksRight);
     }
 
+    /**
+     * Set the position tolerance
+     * @param inch tolerance in inches
+     */
     static void setMotorToleranceInches(double inch) {
         // convert inches to meters and set the tolerance
         setMotorToleranceMeters(inch * 0.0254);
+    }
+
+    /**
+     * Test if motors have reached their target
+     * @return true if both drive motors are close to target
+     */
+    static boolean finished() {
+        if (dcmotorLeft.isBusy()) return false;
+        return !dcmotorRight.isBusy();
     }
 
     /**
@@ -340,14 +367,14 @@ public class Motion {
         // multiply by the radius in meters to get the circumferential distance
         double dist = radians * distWheel;
         // command the motors
-        moveMotorsMeters(dist, -dist);
+        moveMotorsMeters(-dist, dist);
     }
 
     /**
      * Turn an angle in degrees
      * @param degrees angle to turn in degrees
      */
-    static void turn(double degrees) {
+    static void turnDegrees(double degrees) {
         // convert degrees to radians
         double radians = degrees * (Math.PI / 180.0);
         // command the turn
@@ -376,7 +403,12 @@ public class Motion {
         // get the heading
         double heading = headingInches(x, y);
         // calculate the relative turn
-        double radianTurn = heading - thetaPose;
+        double radianTurn = AngleUnit.normalizeRadians(heading - thetaPose);
+
+        // AngleUnit does not specify how the value is normalized!
+        // Make sure it is a -PI to PI range
+        if (radianTurn > Math.PI) radianTurn = radianTurn - 2 * Math.PI;
+
         // execute the turn
         turnRadians(radianTurn);
     }

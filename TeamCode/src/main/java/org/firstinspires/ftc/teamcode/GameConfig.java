@@ -12,9 +12,21 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
  */
 public class GameConfig {
     // define the autonomous options
-    // we could put properties on the locations
+
+    /**
+     * Possible Alliances
+     */
     public enum Alliance {
-        RED, BLUE;
+        RED(1.0), BLUE(-1.0);
+
+        /**
+         * Y axis scale (used to mirror the Y axis according to the alliance)
+         */
+        final double yScale;
+
+        Alliance(double scale) {
+            this.yScale = scale;
+        }
 
         /**
          * Get the next enum...
@@ -24,8 +36,23 @@ public class GameConfig {
             return (this == RED)? BLUE : RED;
         }
     }
+
+    /**
+     * Possible starting locations
+     */
     public enum LocationStart {
-        AUDIENCE, WAREHOUSE;
+        AUDIENCE(-50.0, -72.0),
+        WAREHOUSE(-20.0, -72.0);
+
+        /** Robot starting x-position (inches) */
+        final double x;
+        /** Robot starting y-position (inches) */
+        final double y;
+
+        LocationStart(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
 
         /**
          * Get the next enum
@@ -35,8 +62,24 @@ public class GameConfig {
             return (this == AUDIENCE) ? WAREHOUSE : AUDIENCE;
         }
     }
+
+    /**
+     * Possible ending locations
+     */
     public enum LocationEnd {
-        WAREHOUSE_INNER, WAREHOUSE_OUTER, STORAGE_UNIT;
+        WAREHOUSE_INNER(50.0, -20.0),
+        WAREHOUSE_OUTER(50.0, -40.0),
+        STORAGE_UNIT(-60.0, -40.0);
+
+        /** robot ending x-position (inches) */
+        final double x;
+        /** robot ending y-position (inches) */
+        final double y;
+
+        LocationEnd(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
 
         /**
          * Get the next enum
@@ -45,7 +88,7 @@ public class GameConfig {
         LocationEnd next() {
             switch (this) {
                 case WAREHOUSE_INNER:
-                    return WAREHOUSE_INNER;
+                    return WAREHOUSE_OUTER;
                 case WAREHOUSE_OUTER:
                     return STORAGE_UNIT;
                 default:
@@ -59,7 +102,7 @@ public class GameConfig {
     // These are static and should continue across op mode selections
     public static Alliance alliance = Alliance.RED;
     public static LocationStart locationStart = LocationStart.AUDIENCE;
-    public static LocationEnd locationEnd = LocationEnd.WAREHOUSE_INNER;
+    public static LocationEnd locationEnd = LocationEnd.STORAGE_UNIT;
 
     // remember gamepad state so we can detect transitions
     static private boolean bAlliance = false;
@@ -112,7 +155,6 @@ public class GameConfig {
             // x button is pressed
             if (!bLocationEnd) {
                 locationEnd = locationEnd.next();
-                // button was pressed
                 bLocationEnd = true;
             }
         } else {
@@ -130,5 +172,9 @@ public class GameConfig {
         telemetry.addData("Alliance  (a)", alliance);
         telemetry.addData("Start Loc (b)", locationStart);
         telemetry.addData("End Loc   (x)", locationEnd);
+        telemetry.addData("Enum data", "scale %4.0f, start (%6.01f, %6.01f), end (%6.01f, %6.01f)",
+                alliance.yScale,
+                locationStart.x, alliance.yScale * locationStart.y,
+                locationEnd.x, alliance.yScale * locationEnd.y);
     }
 }
