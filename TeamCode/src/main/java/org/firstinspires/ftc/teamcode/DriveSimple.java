@@ -10,6 +10,10 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import java.util.Locale;
 
+/**
+ * Simple TeleOp Drive OpMode.
+ * Expect this OpMode to use vanilla classes to operate various mechanisms.
+ */
 @TeleOp(name="DriveSimple", group="CodeDev")
 public class DriveSimple extends OpMode {
     DcMotorEx motorLeft = null;
