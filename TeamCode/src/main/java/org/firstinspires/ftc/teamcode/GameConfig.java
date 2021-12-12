@@ -8,7 +8,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 /**
  * A static class used to set the game conditions.
- * Need to set the Alliance, starting position, and ending position
+ * Need to set the Alliance, starting position, and ending position.
  */
 public class GameConfig {
     // define the autonomous options
