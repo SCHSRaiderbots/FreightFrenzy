@@ -74,17 +74,23 @@ class LogDevice {
         // These values scare me a bit: does each motor get its own instance of a motor type?
         // Or do all Ultraplanetary motors share the same motor type?
         //   here is some data from a REV Robotics Core Hex Motor
+        // *** REV RoboticsUltraPlanetary HD Hex Motor
         Log.d("    motor type", motor.getMotorType().getName());
         // ticks reported as 288.0 (REV says 4 ticks/motorRev times 72)
+        // *** 560 (so 20 * 28 ticks/rev)
         Log.d("    motor ticks", String.valueOf(motor.getMotorType().getTicksPerRev()));
         // max RPM 137.0 (documents say 125 RPM)
+        // *** 300 (so 6000 / 20)
         Log.d("    motor rpm", String.valueOf(motor.getMotorType().getMaxRPM()));
         // achievable ticks/second 558.9599999999
+        // *** 2380.
         Log.d("    motor achievable ticks/sec", String.valueOf(motor.getMotorType().getAchieveableMaxTicksPerSecond()));
         // gearing reported as 36.25!
+        // *** 20
         Log.d("    gearing", String.valueOf(motor.getMotorType().getGearing()));
 
         // (dcMotorEx) tolerance is 5 ticks.
+        // *** 5
         Log.d(TAG, "    TargetPositionTolerance = " + motor.getTargetPositionTolerance());
 
         // (dcMotorEx) report velocity (is this the current velocity or the target velocity?
@@ -97,11 +103,13 @@ class LogDevice {
         // dump information about the PIDF coefficients
         // Velocity control
         //   4.96, 0.496, 0, 49.6
+        // *** 10, 3, 0, 0, legacy
         dumpPIDF("  PIDF(rue) = ", motor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
         // Position control
         //   The run to position algorithm only makes use of P.
         //   See .setPIDFCoefficients()
         //   5, 0, 0, 0
+        // *** 10, 0.05, 0, 0, legacy
         dumpPIDF("  PIDF(r2p) = ", motor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION));
     }
 
@@ -136,4 +144,6 @@ class LogDevice {
         // reports current position
         Log.d(TAG, "  position: " + servo.getPosition());
     }
+
+    // TODO: Gamepad.Type
 }

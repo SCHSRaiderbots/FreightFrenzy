@@ -42,6 +42,10 @@ public class AutoSimple extends OpMode {
         motorLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         motorRight.setDirection(DcMotorSimple.Direction.FORWARD);
 
+        // TODO: reverse direction for Ultraplanetary Drive
+        motorLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
         // TODO: put in Motion
         // set Run to Position mode
         motorLeft.setTargetPosition(motorLeft.getCurrentPosition());
@@ -57,6 +61,10 @@ public class AutoSimple extends OpMode {
         // Just use proportional here. Stalls, so add some I. Ach! Does not allow setting I.
         PIDFCoefficients pidfR2P = new PIDFCoefficients(10.0, 0.0, 0.0, 0.0, MotorControlAlgorithm.PIDF);
 
+        // TODO: Robot selection
+        // for the UltraPlanetary
+        pidfRUE.f = 32000.0 / (56.0 * 6000.0 / 60.0);
+
         motorLeft.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRUE);
         motorRight.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRUE);
         motorLeft.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfR2P);
@@ -67,8 +75,13 @@ public class AutoSimple extends OpMode {
 
         // Odometry
         Motion.setRobotMotors(motorLeft, motorRight);
-        Motion.setRobotDims2018();
+        // Motion.setRobotDims2018();
+        // TODO: robot selection
+        Motion.setRobotDims2020();
+        // Motion.setRobotDims2021();
         Motion.setPoseInches(0.0, 0.0, 0.0);
+
+        Motion.setMotorToleranceInches(0.5);
 
         // use the gamepad to set the game starting conditions
         GameConfig.init(gamepad1);
@@ -129,7 +142,7 @@ public class AutoSimple extends OpMode {
         switch (state) {
             case S_INITIAL:
                 // Robot is moving forward 5 inches.
-                if (Motion.finished()) {
+                if (Motion.finished() && gamepad1.a) {
                     // turn toward the Alliance Hub
                     Motion.headTowardInches(-36.0, GameConfig.alliance.yScale * -10.0);
                     state = State.S_TURN;
@@ -138,7 +151,7 @@ public class AutoSimple extends OpMode {
 
             case S_TURN:
                 // Robot is turning toward the Alliance Hub
-                if (Motion.finished()) {
+                if (Motion.finished() && gamepad1.a) {
                     // move toward the Alliance Hub
                     Motion.moveInches(10.0);
                     state = State.S_RUN;
@@ -147,7 +160,7 @@ public class AutoSimple extends OpMode {
 
             case S_RUN:
                 // Moving toward the Alliance Hub
-                if (Motion.finished()) {
+                if (Motion.finished() && gamepad1.a) {
                     // back away from the Alliance Hub
                     Motion.moveInches(-10);
                     state = State.S_DUMP;
@@ -156,7 +169,7 @@ public class AutoSimple extends OpMode {
 
             case S_DUMP:
                 // backing away from the Alliance Hub
-                if (Motion.finished()) {
+                if (Motion.finished() && gamepad1.a) {
                     // turn toward the ending location
                     Motion.headTowardInches(GameConfig.locationEnd.x, GameConfig.locationEnd.y * GameConfig.alliance.yScale);
                     state = State.S_TURN_PARK;
@@ -165,9 +178,12 @@ public class AutoSimple extends OpMode {
 
             case S_TURN_PARK:
                 // turning toward the ending location
-                if (Motion.finished()) {
+                if (Motion.finished() && gamepad1.a) {
                     // run to the parking location
-                    Motion.moveInches(20.0);
+                    double xEnd = GameConfig.locationEnd.x;
+                    double yEnd = GameConfig.locationEnd.y * GameConfig.alliance.yScale;
+                    double dist = Math.hypot(xEnd - Motion.xPoseInches, yEnd - Motion.yPoseInches);
+                    Motion.moveInches(dist);
                     state = State.S_FINAL;
                 }
 

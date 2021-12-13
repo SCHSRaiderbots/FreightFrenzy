@@ -177,7 +177,7 @@ public class Motion {
 
         // set the wheel half separation
         // measured wheel separation times a fudge factor
-        distWheel = (14.0 - (1.0/16.0)) * 0.0254 / 2;
+        distWheel = (0.365) * (1850.0/1800.0) / 2;
 
         // ticks per wheel revolution
         ticksPerWheelRev = HD_HEX_TICKS_PER_REV * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1;
@@ -197,10 +197,11 @@ public class Motion {
 
         // set the wheel half separation
         // measured wheel separation times a fudge factor
-        distWheel = (14.0 - (1.0/16.0)) * 0.0254 / 2;
+        distWheel = (0.345) * 1.000 / 2;
 
         // ticks per wheel revolution
-        ticksPerWheelRev = HD_HEX_TICKS_PER_REV * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1;
+        // TODO: OMG! Motor has 20 tooth and wheel has 15 tooth; also means set F based gear ratio
+        ticksPerWheelRev = HD_HEX_TICKS_PER_REV * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1 * 15.0 / 20.0;
 
         // derived values
         distpertickLeft = mWheelDiameterLeft * Math.PI / (ticksPerWheelRev);
@@ -367,6 +368,7 @@ public class Motion {
         // multiply by the radius in meters to get the circumferential distance
         double dist = radians * distWheel;
         // command the motors
+        // TODO: +- for modern roboot; -+ for old
         moveMotorsMeters(-dist, dist);
     }
 

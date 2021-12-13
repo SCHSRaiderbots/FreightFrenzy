@@ -42,7 +42,7 @@ public class GameConfig {
      */
     public enum LocationStart {
         AUDIENCE(-50.0, -72.0),
-        WAREHOUSE(-20.0, -72.0);
+        WAREHOUSE(-10.0, -72.0);
 
         /** Robot starting x-position (inches) */
         final double x;

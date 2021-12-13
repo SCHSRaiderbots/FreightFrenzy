@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.USBAccessibleLynxModule;
 
 import java.util.Locale;
 
@@ -91,9 +92,17 @@ public class DriveSimple extends OpMode {
         motorLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         motorRight.setDirection(DcMotorSimple.Direction.FORWARD);
 
+        // TODO: for UltraPlanetary
+        motorLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+
         // Odometry
         Motion.setRobotMotors(motorLeft, motorRight);
-        Motion.setRobotDims2018();
+        // Motion.setRobotDims2018();
+        // TODO: RobotDims
+        // Motion.setRobotDims2021();
+        Motion.setRobotDims2020();
         Motion.setPoseInches(0.0, 0.0, 0.0);
 
         // report the initialization
@@ -106,8 +115,8 @@ public class DriveSimple extends OpMode {
         Motion.updateRobotPose();
 
         // report position
-        telemetry.addData("position",
-                String.format((Locale)null, "%6.01f %6.01f %6.01f",
+        telemetry.addData("position (inches)",
+                String.format((Locale)null, "(%6.01f %6.01f) %6.01f",
                         Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees));
     }
 
@@ -133,7 +142,10 @@ public class DriveSimple extends OpMode {
         }
 
         // value for conversion
-        final double power = 200.0;
+        double power = 200.0;
+
+        // TODO: use abstract units
+        power = 1000.0;
 
         // get the operator commands
         double powerLeft = -gamepad1.left_stick_y * power;
