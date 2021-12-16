@@ -14,7 +14,7 @@ public class GameConfig {
     // define the autonomous options
 
     /**
-     * Possible Alliances
+     * Possible Alliances: Red or Blue
      */
     public enum Alliance {
         RED(1.0), BLUE(-1.0);
@@ -38,7 +38,7 @@ public class GameConfig {
     }
 
     /**
-     * Possible starting locations
+     * Possible starting locations for the robot
      */
     public enum LocationStart {
         AUDIENCE(-50.0, -72.0),
@@ -49,6 +49,7 @@ public class GameConfig {
         /** Robot starting y-position (inches) */
         final double y;
 
+        /** Initialize a starting location */
         LocationStart(double x, double y) {
             this.x = x;
             this.y = y;
@@ -59,12 +60,18 @@ public class GameConfig {
          * @return next enum
          */
         LocationStart next() {
-            return (this == AUDIENCE) ? WAREHOUSE : AUDIENCE;
+            // this enum's index
+            int ord = this.ordinal();
+            // array of values
+            LocationStart[] vals = LocationStart.values();
+
+            // wrap around increment
+            return vals[(ord+1) % vals.length];
         }
     }
 
     /**
-     * Possible ending locations
+     * Possible ending locations for the robot
      */
     public enum LocationEnd {
         WAREHOUSE_INNER(50.0, -20.0),
@@ -76,6 +83,7 @@ public class GameConfig {
         /** robot ending y-position (inches) */
         final double y;
 
+        /** initialize an ending location */
         LocationEnd(double x, double y) {
             this.x = x;
             this.y = y;
@@ -86,15 +94,13 @@ public class GameConfig {
          * @return next enum
          */
         LocationEnd next() {
-            switch (this) {
-                case WAREHOUSE_INNER:
-                    return WAREHOUSE_OUTER;
-                case WAREHOUSE_OUTER:
-                    return STORAGE_UNIT;
-                default:
-                case STORAGE_UNIT:
-                    return WAREHOUSE_INNER;
-            }
+            // this enum's index
+            int ord = this.ordinal();
+            // array of values
+            LocationEnd[] vals = LocationEnd.values();
+
+            // wrap around increment
+            return vals[(ord+1) % vals.length];
         }
     }
 
@@ -104,7 +110,7 @@ public class GameConfig {
     public static LocationStart locationStart = LocationStart.AUDIENCE;
     public static LocationEnd locationEnd = LocationEnd.STORAGE_UNIT;
 
-    // remember gamepad state so we can detect transitions
+    // remember the game pad state so we can detect transitions
     static private boolean bAlliance = false;
     static private boolean bLocationStart = false;
     static private boolean bLocationEnd = false;
