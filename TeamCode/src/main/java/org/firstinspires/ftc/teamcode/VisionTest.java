@@ -50,6 +50,8 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
+import android.util.Log;
+
 /**
  * This OpMode illustrates using the Vuforia localizer to determine positioning and orientation of
  * robot on the FTC field using a WEBCAM.  The code is structured as a LinearOpMode
@@ -87,7 +89,7 @@ public class VisionTest extends OpMode {
 
         // init tracking
         // TODO: does not play well with others...
-        // vision.initTracking();
+        vision.initTracking();
 
         // build an object detector
         vision.initTfod(hardwareMap);
@@ -112,7 +114,11 @@ public class VisionTest extends OpMode {
         telemetry.addData("Navigation", "On");
         vision.tfod.deactivate();
 
-        vision.targets.activate();
+        if (vision.targets == null) {
+            Log.d("vision.targets", "is null!");
+        } else {
+            vision.targets.activate();
+        }
     }
 
     @Override

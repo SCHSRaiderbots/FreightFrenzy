@@ -152,7 +152,7 @@ public class AutoSimple extends OpMode {
                 // Robot is moving forward 5 inches.
                 if (Motion.finished()) {
                     // turn toward the Alliance Hub
-                    Motion.headTowardInches(-36.0, GameConfig.alliance.yScale * -10.0);
+                    Motion.headTowardInches(-12.0, GameConfig.alliance.yScale * -36.0);
                     state = State.S_TURN;
                 }
                 break;
@@ -161,7 +161,7 @@ public class AutoSimple extends OpMode {
                 // Robot is turning toward the Alliance Hub
                 if (Motion.finished()) {
                     // move toward the Alliance Hub
-                    Motion.moveInches(10.0);
+                    Motion.moveInches(20.0);
                     state = State.S_RUN;
                 }
                 break;

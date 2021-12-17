@@ -52,7 +52,7 @@ public class Motion {
     public enum Robot {
         ROBOT_2018, ROBOT_2019, ROBOT_2020, ROBOT_2021
     }
-    public static Robot robot = Robot.ROBOT_2018;
+    public static Robot robot = Robot.ROBOT_2021;
 
     // robot parameters
 
