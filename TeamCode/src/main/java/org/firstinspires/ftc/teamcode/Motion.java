@@ -49,6 +49,10 @@ public class Motion {
     public static final double HD_HEX_GEAR_CART_5_1 = 68.0/13.0;
 
     // Info about the actual robot
+    public enum Robot {
+        ROBOT_2018, ROBOT_2019, ROBOT_2020, ROBOT_2021
+    }
+    public static Robot robot = Robot.ROBOT_2018;
 
     // robot parameters
 
@@ -206,6 +210,24 @@ public class Motion {
         // derived values
         distpertickLeft = mWheelDiameterLeft * Math.PI / (ticksPerWheelRev);
         distpertickRight = mWheelDiameterRight * Math.PI / (ticksPerWheelRev);
+    }
+
+    static void setRobotDims() {
+        switch (robot) {
+            case ROBOT_2018:
+                setRobotDims2018();
+                break;
+            case ROBOT_2019:
+                setRobotDims2019();
+                break;
+            case ROBOT_2020:
+                setRobotDims2020();
+                break;
+            case ROBOT_2021:
+            default:
+                setRobotDims2021();
+                break;
+        }
     }
 
     /**

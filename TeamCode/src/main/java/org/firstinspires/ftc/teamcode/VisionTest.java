@@ -86,7 +86,8 @@ public class VisionTest extends OpMode {
         vision.initVuforia(hardwareMap);
 
         // init tracking
-        vision.initTracking();
+        // TODO: does not play well with others...
+        // vision.initTracking();
 
         // build an object detector
         vision.initTfod(hardwareMap);
@@ -101,6 +102,8 @@ public class VisionTest extends OpMode {
     public void init_loop() {
         // report detected objects
         vision.reportDetections(telemetry);
+
+        vision.reportTracking(telemetry);
     }
 
     @Override
