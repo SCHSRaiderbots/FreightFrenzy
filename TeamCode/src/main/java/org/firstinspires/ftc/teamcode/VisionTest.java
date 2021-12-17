@@ -87,11 +87,14 @@ public class VisionTest extends OpMode {
 
         // init tracking
         vision.initTracking();
-        // the above set vision.targets.activate()
-        // that may not be a good idea.
 
         // build an object detector
         vision.initTfod(hardwareMap);
+
+        // I forgot this step...
+        if (vision.tfod != null) {
+            vision.tfod.activate();
+        }
     }
 
     @Override
