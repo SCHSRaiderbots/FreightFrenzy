@@ -39,11 +39,12 @@ public class Motion {
     //    the 20:1 is geared 20 to 1
     //    the 40:1 is geared 40 to 1
 
-    // The HD Hex Motor is also used with the Ultraplanetary cartridges.
+    // The HD Hex Motor is also used with the UltraPlanetary cartridges.
     // These values are used to calculate actual gear ratios
-    //    the 3:1 cartridge is actually 84:29 (2.9...)
-    //    the 4:1 cartridge is actually 76:21 (3.6...)
-    //    the 5:1 cartridge is actually 68:13 (5.2...)
+    // The ring gear has 55 teeth
+    //    the 3:1 cartridge is actually 84:29 (2.9...) = (55+29)/29
+    //    the 4:1 cartridge is actually 76:21 (3.6...) = (55+21)/21
+    //    the 5:1 cartridge is actually 68:13 (5.2...) = (55+13)/13
     public static final double HD_HEX_GEAR_CART_3_1 = 84.0/29.0;
     public static final double HD_HEX_GEAR_CART_4_1 = 76.0/21.0;
     public static final double HD_HEX_GEAR_CART_5_1 = 68.0/13.0;
@@ -201,7 +202,7 @@ public class Motion {
 
         // set the wheel half separation
         // measured wheel separation times a fudge factor
-        distWheel = (0.345) * 1.000 / 2;
+        distWheel = (0.345) / 2;
 
         // ticks per wheel revolution
         // TODO: OMG! Motor has 20 tooth and wheel has 15 tooth; also means set F based gear ratio
@@ -390,7 +391,7 @@ public class Motion {
         // multiply by the radius in meters to get the circumferential distance
         double dist = radians * distWheel;
         // command the motors
-        // TODO: +- for modern roboot; -+ for old
+        // TODO: +- for modern robot; -+ for old
         moveMotorsMeters(-dist, dist);
     }
 

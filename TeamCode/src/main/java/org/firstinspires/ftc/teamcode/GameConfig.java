@@ -1,9 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.checkerframework.checker.units.qual.A;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 /**
@@ -63,10 +61,10 @@ public class GameConfig {
             // this enum's index
             int ord = this.ordinal();
             // array of values
-            LocationStart[] vals = LocationStart.values();
+            LocationStart[] values = LocationStart.values();
 
             // wrap around increment
-            return vals[(ord+1) % vals.length];
+            return values[(ord+1) % values.length];
         }
     }
 
@@ -97,10 +95,10 @@ public class GameConfig {
             // this enum's index
             int ord = this.ordinal();
             // array of values
-            LocationEnd[] vals = LocationEnd.values();
+            LocationEnd[] values = LocationEnd.values();
 
             // wrap around increment
-            return vals[(ord+1) % vals.length];
+            return values[(ord+1) % values.length];
         }
     }
 
@@ -118,9 +116,8 @@ public class GameConfig {
     /**
      * Initialize the Game Configuration Dialog.
      * Call during the Autonomous OpMode init() routine
-     * @param gamepad1 gamepad controlling configuration
      */
-    static void init(Gamepad gamepad1) {
+    static void init() {
         bAlliance=false;
         bLocationStart = false;
         bLocationEnd = false;

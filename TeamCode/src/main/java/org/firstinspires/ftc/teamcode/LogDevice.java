@@ -2,9 +2,11 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -19,6 +21,48 @@ import com.qualcomm.robotcore.hardware.Servo;
 class LogDevice {
     // String used for the log
     private static final String TAG = "LogDevice";
+
+    static void dumpFirmware(HardwareMap hardwareMap) {
+        // look at all the Lynx Modules
+        for (LynxModule module : hardwareMap.getAll(LynxModule.class)) {
+            // can I look at the configuration name here?
+
+            Log.d("Module name", String.valueOf(module.getDeviceName()));
+            // both are DQ2EJR1E for Riley
+            Log.d("Module serial number", String.valueOf(module.getSerialNumber()));
+            Log.d("Module module serial number", String.valueOf(module.getModuleSerialNumber()));
+            // 3 or 4 for Riley
+            Log.d("Module address", String.valueOf(module.getModuleAddress()));
+
+            // look at the version
+            String version = module.getNullableFirmwareVersionString();
+
+            // HW: 20, Maj: 1, Min: 8, Eng: 2
+            Log.d("Module firmware", version);
+
+            // split the string into parts
+            // "HW: 20, Maj: 1, Min: 8, Eng: 2"
+            //  0   1   2    3  4    5  6    7
+            //  firmware string -> HW 20 Maj 1 Min 8 Eng 2
+            String[] parts = version.split("[ :,]+");
+
+            // did the split work?
+            if (parts != null && parts.length >= 8) {
+                // turn sub-versions into integers
+                int major = Integer.parseInt(parts[3]);
+                int minor = Integer.parseInt(parts[5]);
+                int eng = Integer.parseInt(parts[7]);
+
+                // combine the subversion info to make a simple number
+                int comb = (major << 16) | (minor << 8) | eng;
+
+                // test against current (December 2021) version 1.8.2
+                if (comb < 0x010802) {
+                    Log.d("FIRMWARE", "..fails");
+                }
+            }
+        }
+    }
 
     static void dump(String name, HardwareDevice device) {
         Log.d(TAG, "hardware device " + name);
@@ -72,7 +116,7 @@ class LogDevice {
 
         // Want details about the motor type...
         // These values scare me a bit: does each motor get its own instance of a motor type?
-        // Or do all Ultraplanetary motors share the same motor type?
+        // Or do all UltraPlanetary motors share the same motor type?
         //   here is some data from a REV Robotics Core Hex Motor
         // *** REV RoboticsUltraPlanetary HD Hex Motor
         Log.d("    motor type", motor.getMotorType().getName());

@@ -92,8 +92,8 @@ public class AutoSimple extends OpMode {
         // set the position tolerance (depends on robot dimensions)
         Motion.setMotorToleranceInches(0.5);
 
-        // use the gamepad to set the game starting conditions
-        GameConfig.init(gamepad1);
+        // initialize the game configuration
+        GameConfig.init();
     }
 
     @Override
