@@ -1,6 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.rev.RevTouchSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.robotcontroller.external.samples.SensorDigitalTouch;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 /**
  * This class consolidates some of the robot motion calculations.
@@ -37,16 +42,21 @@ public class Motion {
     //    the 20:1 is geared 20 to 1
     //    the 40:1 is geared 40 to 1
 
-    // The HD Hex Motor is also used with the Ultraplanetary cartridges.
+    // The HD Hex Motor is also used with the UltraPlanetary cartridges.
     // These values are used to calculate actual gear ratios
-    //    the 3:1 cartridge is actually 84:29 (2.9...)
-    //    the 4:1 cartridge is actually 76:21 (3.6...)
-    //    the 5:1 cartridge is actually 68:13 (5.2...)
+    // The ring gear has 55 teeth
+    //    the 3:1 cartridge is actually 84:29 (2.9...) = (55+29)/29
+    //    the 4:1 cartridge is actually 76:21 (3.6...) = (55+21)/21
+    //    the 5:1 cartridge is actually 68:13 (5.2...) = (55+13)/13
     public static final double HD_HEX_GEAR_CART_3_1 = 84.0/29.0;
     public static final double HD_HEX_GEAR_CART_4_1 = 76.0/21.0;
     public static final double HD_HEX_GEAR_CART_5_1 = 68.0/13.0;
 
     // Info about the actual robot
+    public enum Robot {
+        ROBOT_2018, ROBOT_2019, ROBOT_2020, ROBOT_2021
+    }
+    public static Robot robot = Robot.ROBOT_2021;
 
     // robot parameters
 
@@ -68,7 +78,6 @@ public class Motion {
     // the distance per tick for each wheel = circumference / ticks
     static private double distpertickLeft = mWheelDiameterLeft * Math.PI / (ticksPerWheelRev);
     static private double distpertickRight = mWheelDiameterRight * Math.PI / (ticksPerWheelRev);
-
 
     // the robot pose
     //   can have .updatePose(), .getPose(), .setPose()
@@ -97,6 +106,17 @@ public class Motion {
     //    That could always happen during .init()
     static private int cEncoderLeft;
     static private int cEncoderRight;
+
+    static void init(HardwareMap hardwareMap) {
+        // identify the robot
+
+        // if it has a robot2018 touch sensor, then it is a 2018 robot...
+        RevTouchSensor touch = hardwareMap.tryGet(RevTouchSensor.class, "robot2018");
+        if (touch != null) {
+            // found the 2018 robot
+            robot = Robot.ROBOT_2018;
+        }
+    }
 
     /**
      * Odometry must know which motors are being used...
@@ -175,7 +195,7 @@ public class Motion {
 
         // set the wheel half separation
         // measured wheel separation times a fudge factor
-        distWheel = (14.0 - (1.0/16.0)) * 0.0254 / 2;
+        distWheel = (0.365) * (1850.0/1800.0) / 2;
 
         // ticks per wheel revolution
         ticksPerWheelRev = HD_HEX_TICKS_PER_REV * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1;
@@ -195,14 +215,33 @@ public class Motion {
 
         // set the wheel half separation
         // measured wheel separation times a fudge factor
-        distWheel = (14.0 - (1.0/16.0)) * 0.0254 / 2;
+        distWheel = (0.345) / 2;
 
         // ticks per wheel revolution
-        ticksPerWheelRev = HD_HEX_TICKS_PER_REV * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1;
+        // TODO: OMG! Motor has 20 tooth and wheel has 15 tooth; also means set F based gear ratio
+        ticksPerWheelRev = HD_HEX_TICKS_PER_REV * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1 * 15.0 / 20.0;
 
         // derived values
         distpertickLeft = mWheelDiameterLeft * Math.PI / (ticksPerWheelRev);
         distpertickRight = mWheelDiameterRight * Math.PI / (ticksPerWheelRev);
+    }
+
+    static void setRobotDims() {
+        switch (robot) {
+            case ROBOT_2018:
+                setRobotDims2018();
+                break;
+            case ROBOT_2019:
+                setRobotDims2019();
+                break;
+            case ROBOT_2020:
+                setRobotDims2020();
+                break;
+            case ROBOT_2021:
+            default:
+                setRobotDims2021();
+                break;
+        }
     }
 
     /**
@@ -255,9 +294,9 @@ public class Motion {
 
     /***
      * Set the current robot pose
-     * @param x - robot x position in inches
-     * @param y - robot y position in inches
-     * @param theta - robot orientation in degrees
+     * @param x robot x position in inches
+     * @param y robot y position in inches
+     * @param theta robot orientation in degrees
      */
     static void setPoseInches(double x, double y, double theta) {
         // convert inches to meters, degrees to radians, and set state variables
@@ -271,34 +310,151 @@ public class Motion {
         thetaPoseDegrees = theta;
     }
 
-    static void moveMeters(double m) {
-        double ticksLeft = m / distpertickLeft;
-        double ticksRight = m / distpertickRight;
+    /**
+     * Get the current position tolerance in meters
+     * @return tolerance in meters
+     */
+    static double getMotorToleranceMeters() {
+        return dcmotorLeft.getTargetPositionTolerance() * distpertickLeft;
+    }
 
-        dcmotorLeft.setTargetPosition(cEncoderLeft+(int)ticksLeft);
-        dcmotorRight.setTargetPosition(cEncoderRight+(int)ticksRight);
+    /**
+     * Get the current position tolerance in inches
+     * @return tolerance in inches
+     */
+    static double getMotorToleranceInches() {
+        return getMotorToleranceMeters() / 0.0254 ;
+    }
+
+    /**
+     * Set the position tolerance
+     * @param m tolerance in meters
+     */
+    static void setMotorToleranceMeters(double m) {
+        int ticksLeft = (int)(m / distpertickLeft);
+        int ticksRight = (int)(m / distpertickRight);
+
+        dcmotorLeft.setTargetPositionTolerance(ticksLeft);
+        dcmotorRight.setTargetPositionTolerance(ticksRight);
+    }
+
+    /**
+     * Set the position tolerance
+     * @param inch tolerance in inches
+     */
+    static void setMotorToleranceInches(double inch) {
+        // convert inches to meters and set the tolerance
+        setMotorToleranceMeters(inch * 0.0254);
+    }
+
+    /**
+     * Test if motors have reached their target
+     * @return true if both drive motors are close to target
+     */
+    static boolean finished() {
+        if (dcmotorLeft.isBusy()) return false;
+        return !dcmotorRight.isBusy();
+    }
+
+    /**
+     * Move the left and right motors a particular distance
+     * @param mLeft distance to move left motor in meters
+     * @param mRight distance to move right motor in meters
+     */
+    static void moveMotorsMeters(double mLeft, double mRight) {
+        // convert distance to motor ticks
+        int ticksLeft = (int)(mLeft / distpertickLeft);
+        int ticksRight = (int)(mRight / distpertickRight);
+
+        dcmotorLeft.setTargetPosition(cEncoderLeft + ticksLeft);
+        dcmotorRight.setTargetPosition(cEncoderRight + ticksRight);
+    }
+
+    /**
+     * Move the left and right motors a particular distance
+     * @param inLeft distance to move the left motor in inches
+     * @param inRight distance to move the right motor in inches
+     */
+    static void moveMotorsInches(double inLeft, double inRight) {
+        moveMotorsMeters(inLeft * 0.0254, inRight * 0.0254);
     }
 
     /**
      * Move straight ahead a particular distance
-     * @param in - distance in inches
+     * @param m distance in meters
+     */
+    static void moveMeters(double m) {
+        moveMotorsMeters(m, m);
+    }
+
+    /**
+     * Move straight ahead a particular distance
+     * @param in distance in inches
      */
     static void moveInches(double in) {
+        // convert inches to meters and call moveMeters()
         moveMeters(in * 0.0254);
     }
 
     /**
      * Turn a relative angle
-     * @param deg - angle in degrees
+     * @param radians angle in radians
      */
-    static void turn(double deg) {
-        double radians = deg * (Math.PI / 180.0);
+    static void turnRadians(double radians) {
+        // multiply by the radius in meters to get the circumferential distance
         double dist = radians * distWheel;
-        double ticksLeft = dist / distpertickLeft;
-        double ticksRight = -dist / distpertickRight;
+        // command the motors
+        // TODO: +- for modern robot; -+ for old
+        moveMotorsMeters(-dist, dist);
+    }
 
-        dcmotorLeft.setTargetPosition(cEncoderLeft+(int)ticksLeft);
-        dcmotorRight.setTargetPosition(cEncoderRight+(int)ticksRight);
+    /**
+     * Turn an angle in degrees
+     * @param degrees angle to turn in degrees
+     */
+    static void turnDegrees(double degrees) {
+        // convert degrees to radians
+        double radians = degrees * (Math.PI / 180.0);
+        // command the turn
+        turnRadians(radians);
+    }
+
+    /**
+     * Calculate the heading from the current position to (x, y) in inches
+     * @param x x coordinate in inches
+     * @param y y coordinate in inches
+     * @return heading angle in radians
+     */
+    static double headingInches(double x, double y) {
+        double inchDX = x - xPoseInches;
+        double inchDY = y - yPoseInches;
+
+        return Math.atan2(inchDY, inchDX);
+    }
+
+    /**
+     * Point the robot to the position (x, y) in inches
+     * @param x y coordinate in inches
+     * @param y y coordinate in inches
+     */
+    static void headTowardInches(double x, double y) {
+        // get the heading
+        double heading = headingInches(x, y);
+        // calculate the relative turn
+        double radianTurn = AngleUnit.normalizeRadians(heading - thetaPose);
+
+        // AngleUnit does not specify how the value is normalized!
+        // Make sure it is a -PI to PI range
+        if (radianTurn > Math.PI) radianTurn = radianTurn - 2 * Math.PI;
+
+        // execute the turn
+        turnRadians(radianTurn);
+    }
+
+    static double distanceToInches(double x, double y) {
+        // currently at (xPoseInches, yPoseInches)
+        // d = sqrt((x1 -x2)^2 + (y1-y2)^2 )
+        return Math.hypot(x-xPoseInches, y-yPoseInches);
     }
 
 }
