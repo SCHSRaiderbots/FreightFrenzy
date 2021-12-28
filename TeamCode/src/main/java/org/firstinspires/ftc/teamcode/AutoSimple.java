@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
  *   deposit preloaded freight (6 points) at appropriate level (10 or 20 points)
  *   get clear of alliance shipping hub
  *   move to Warehouse (10) or Storage Unit (6)
+ *   shreya was here
  */
 @Autonomous(name = "AutoSimple", group = "Production")
 public class AutoSimple extends OpMode {
