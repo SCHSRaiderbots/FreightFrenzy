@@ -172,6 +172,7 @@ public class GameConfig {
      */
     static void report(Telemetry telemetry) {
         // report the configuration
+        telemetry.addData("Robot", Motion.robot);
         telemetry.addData("Alliance  (a)", alliance);
         telemetry.addData("Start Loc (b)", locationStart);
         telemetry.addData("End Loc   (x)", locationEnd);

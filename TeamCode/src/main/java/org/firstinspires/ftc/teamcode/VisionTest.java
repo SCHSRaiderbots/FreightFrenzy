@@ -76,7 +76,7 @@ public class VisionTest extends OpMode {
         // build an object detector
         vision.initTfod(hardwareMap);
 
-        // I forgot this step...
+        // if we have an object detector, then activate it
         if (vision.tfod != null) {
             vision.tfod.activate();
         }
