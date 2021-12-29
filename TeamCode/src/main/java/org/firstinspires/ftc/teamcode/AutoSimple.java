@@ -17,6 +17,10 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
  *   deposit preloaded freight (6 points) at appropriate level (10 or 20 points)
  *   get clear of alliance shipping hub
  *   move to Warehouse (10) or Storage Unit (6)
+ *   shreya was here
+ *   anshul was here again
+ *   riya was here
+ *   riya was here again
  */
 @Autonomous(name = "AutoSimple", group = "Production")
 public class AutoSimple extends OpMode {
@@ -34,6 +38,9 @@ public class AutoSimple extends OpMode {
 
     @Override
     public void init() {
+        // put motion code in Motion class
+        Motion.init(hardwareMap);
+
         // get the motors
         motorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
         motorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
@@ -68,7 +75,7 @@ public class AutoSimple extends OpMode {
         // Just use proportional here. Stalls, so add some I. Ach! Does not allow setting I.
         PIDFCoefficients pidfR2P = new PIDFCoefficients(10.0, 0.0, 0.0, 0.0, MotorControlAlgorithm.PIDF);
 
-        // TODO: Robot selection
+        // TODO: Robot selection -- a change means resetting PIDF parameters
         // for the UltraPlanetary
         if (Motion.robot != Motion.Robot.ROBOT_2018)
             pidfRUE.f = 32000.0 / (56.0 * 6000.0 / 60.0);

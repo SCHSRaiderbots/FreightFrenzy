@@ -119,8 +119,6 @@ public class Vision {
         // TODO: what does this mean?
         parameters.useExtendedTracking = false;
 
-
-
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
 
@@ -161,6 +159,12 @@ public class Vision {
 
                 // step through the list of recognitions and display boundary info.
                 for (Recognition recognition : updatedRecognitions) {
+                    // TODO: filter the recognitions
+                    // is it a reasonable object (e.g., just interested in ducks)
+                    // is it a reasonable size (sometimes recognitions are huge)
+                    // is it at a reasonable position (expected position)
+                    // is it he best confidence
+                    // at another time, we may want to identify objects to pick up
                     telemetry.addData(recognition.getLabel(),
                             String.format(locale, "(%.01f, %.01f) (%.01f, %.01f) %.03f",
                                     recognition.getLeft(), recognition.getTop(),
@@ -173,7 +177,9 @@ public class Vision {
     }
 
     /**
-     * Initialize tracking
+     * Initialize tracking by loading the trackables.
+     * Position information depends on the robot!
+     * Does not activate tracking!
      */
     void initTracking() {
         // Load the data sets for the trackable objects. These particular data
@@ -228,6 +234,7 @@ public class Vision {
          * Finally the camera can be translated to its actual mounting position on the robot.
          *      In this example, it is centered on the robot (left-to-right and front-to-back), and 6 inches above ground level.
          */
+        // TODO: fix camera displacement issues
         final float CAMERA_FORWARD_DISPLACEMENT = 0.0f * mmPerInch;   // eg: Enter the forward distance from the center of the robot to the camera lens
         final float CAMERA_VERTICAL_DISPLACEMENT = 6.0f * mmPerInch;   // eg: Camera is 6 Inches above ground
         final float CAMERA_LEFT_DISPLACEMENT = 0.0f * mmPerInch;   // eg: Enter the left distance from the center of the robot to the camera lens
@@ -236,7 +243,7 @@ public class Vision {
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XZY, DEGREES, 90, 90, 0));
 
-        /*  Let all the trackable listeners know where the camera is.  */
+        // Let all the trackable listeners know where the camera is.
         for (VuforiaTrackable trackable : allTrackables) {
             ((VuforiaTrackableDefaultListener) trackable.getListener()).setCameraLocationOnRobot(webcamName, cameraLocationOnRobot);
         }
@@ -253,17 +260,20 @@ public class Vision {
      * @param dx, dy, dz  Target offsets in x,y,z axes
      * @param rx, ry, rz  Target rotations in x,y,z axes
      */
-    void    identifyTarget(int targetIndex, String targetName, float dx, float dy, float dz, float rx, float ry, float rz) {
+    void identifyTarget(int targetIndex, String targetName, float dx, float dy, float dz, float rx, float ry, float rz) {
         VuforiaTrackable aTarget = targets.get(targetIndex);
         aTarget.setName(targetName);
         aTarget.setLocation(OpenGLMatrix.translation(dx, dy, dz)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, rx, ry, rz)));
     }
 
-    private OpenGLMatrix lastLocation   = null;
+    private OpenGLMatrix lastLocation = null;
 
     /**
-     * Report a target in view
+     * Report a target in view.
+     * Need to fix this logic to always report a tracking result.
+     * Split off the actual tracking result.
+     * Split off the targetVisible logic to indicate a new result.
      * @param telemetry telemetry object to report to screen
      */
     void reportTracking(Telemetry telemetry) {
@@ -307,7 +317,5 @@ public class Vision {
             // nothing was visible
             telemetry.addData("Visible Target", "none");
         }
-
     }
-
 }

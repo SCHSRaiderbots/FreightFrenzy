@@ -1,7 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.rev.RevTouchSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcontroller.external.samples.SensorDigitalTouch;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 /**
@@ -76,7 +79,6 @@ public class Motion {
     static private double distpertickLeft = mWheelDiameterLeft * Math.PI / (ticksPerWheelRev);
     static private double distpertickRight = mWheelDiameterRight * Math.PI / (ticksPerWheelRev);
 
-
     // the robot pose
     //   can have .updatePose(), .getPose(), .setPose()
     //   using static should allow the Pose to be carried over from Autonomous to Teleop
@@ -104,6 +106,17 @@ public class Motion {
     //    That could always happen during .init()
     static private int cEncoderLeft;
     static private int cEncoderRight;
+
+    static void init(HardwareMap hardwareMap) {
+        // identify the robot
+
+        // if it has a robot2018 touch sensor, then it is a 2018 robot...
+        RevTouchSensor touch = hardwareMap.tryGet(RevTouchSensor.class, "robot2018");
+        if (touch != null) {
+            // found the 2018 robot
+            robot = Robot.ROBOT_2018;
+        }
+    }
 
     /**
      * Odometry must know which motors are being used...
@@ -436,6 +449,12 @@ public class Motion {
 
         // execute the turn
         turnRadians(radianTurn);
+    }
+
+    static double distanceToInches(double x, double y) {
+        // currently at (xPoseInches, yPoseInches)
+        // d = sqrt((x1 -x2)^2 + (y1-y2)^2 )
+        return Math.hypot(x-xPoseInches, y-yPoseInches);
     }
 
 }

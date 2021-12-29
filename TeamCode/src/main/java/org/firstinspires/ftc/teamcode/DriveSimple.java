@@ -4,6 +4,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Locale;
 
@@ -16,6 +19,9 @@ public class DriveSimple extends OpMode {
     DcMotorEx motorLeft = null;
     DcMotorEx motorRight = null;
 
+    // distance sensor
+    DistanceSensor distanceSensorRev2m;
+
     @Override
     public void init() {
         {
@@ -26,6 +32,8 @@ public class DriveSimple extends OpMode {
             LogDevice.dumpFirmware(hardwareMap);
         }
 
+        // Want to put all the motion code in the Motion class
+        Motion.init(hardwareMap);
 
         // get the motors
         motorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
@@ -44,7 +52,6 @@ public class DriveSimple extends OpMode {
         motorLeft.setDirection(DcMotorSimple.Direction.FORWARD);
         motorRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
-
         // Odometry
         Motion.setRobotMotors(motorLeft, motorRight);
         // Motion.setRobotDims2018();
@@ -52,6 +59,9 @@ public class DriveSimple extends OpMode {
         // Motion.setRobotDims2021();
         Motion.setRobotDims2020();
         Motion.setPoseInches(0.0, 0.0, 0.0);
+
+        // try to get the Rev 2m distance sensor
+        distanceSensorRev2m = hardwareMap.tryGet(DistanceSensor.class, "rev2meter");
 
         // report the initialization
         telemetry.addData("Drive motors", "initialized");
@@ -66,6 +76,13 @@ public class DriveSimple extends OpMode {
         telemetry.addData("position (inches)",
                 String.format((Locale)null, "(%6.01f %6.01f) %6.01f",
                         Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees));
+
+        // if we have a 2m distance sensor
+        if (distanceSensorRev2m != null) {
+            // then obtain the distance
+            telemetry.addData("distance", "rev 2m: %8.2f inch",
+                    distanceSensorRev2m.getDistance(DistanceUnit.INCH));
+        }
     }
 
     @Override
@@ -95,6 +112,9 @@ public class DriveSimple extends OpMode {
         // TODO: use abstract units
         double power = 1000.0;
 
+        // TODO: arcade drive
+        // TODO: quadratic drive
+
         // get the operator commands
         double powerLeft = -gamepad1.left_stick_y * power;
         double powerRight = -gamepad1.right_stick_y * power;
@@ -108,6 +128,13 @@ public class DriveSimple extends OpMode {
 
         // report the power levels
         telemetry.addData("Drive motors", String.format((Locale)null, "%.03f %.03f", powerLeft, powerRight));
+
+        // if we have a 2m distance sensor
+        if (distanceSensorRev2m != null) {
+            // then report the distance
+            telemetry.addData("distance", "rev 2m: %8.2f inch",
+                    distanceSensorRev2m.getDistance(DistanceUnit.INCH));
+        }
     }
 
     @Override
