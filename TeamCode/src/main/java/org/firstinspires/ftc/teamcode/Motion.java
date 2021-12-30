@@ -456,5 +456,11 @@ public class Motion {
         // d = sqrt((x1 -x2)^2 + (y1-y2)^2 )
         return Math.hypot(x-xPoseInches, y-yPoseInches);
     }
+    static void moveForward(double inches) {
+        double ticksperinch = (288) / (90  * Math.PI  * (inches / 25.4));
+        int ticks = (int)(inches * ticksperinch);
+        dcmotorLeft.setTargetPosition(dcmotorLeft.getCurrentPosition() + ticks);
+        dcmotorRight.setTargetPosition(dcmotorRight.getCurrentPosition() + ticks);
+    }
 
 }
