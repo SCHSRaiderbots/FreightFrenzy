@@ -14,8 +14,6 @@ public class AutoDrive extends OpMode {
     static private DcMotorEx dcmotorLeft;
     static private DcMotorEx dcmotorRight;
 
-
-    int test_num = 2;
     private enum State {
         STATE_INITIAL,
         STATE_FORWARD,
@@ -32,6 +30,8 @@ public class AutoDrive extends OpMode {
     }
     private AutoDrive.State currState;
     private ElapsedTime currStateTime = new ElapsedTime();
+
+    @Override
     public void init() {
         telemetry.addData("Status", "Initialized");
 
@@ -44,7 +44,7 @@ public class AutoDrive extends OpMode {
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         dcmotorLeft.setDirection(DcMotor.Direction.FORWARD);
-        dcmotorRight.setDirection(DcMotor.Direction.FORWARD);
+        dcmotorRight.setDirection(DcMotor.Direction.REVERSE);
 
         // Tell the driver that initialization is complete.
         //telemetry.addData("Status", "Initialized");
@@ -55,98 +55,121 @@ public class AutoDrive extends OpMode {
 
         dcmotorLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         dcmotorRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        //leftMotor.setPower(1);
-        //rightMotor.setPower(1);
+
+        // set the powers
+        dcmotorLeft.setPower(0.4);
+        dcmotorRight.setPower(0.4);
 
         currState = AutoDrive.State.STATE_INITIAL;
         Motion.setRobotDims2020();
 
     }
+
+    @Override
     public void init_loop() {
+        Motion.updateRobotPose();
+
+        // detect where the duck is
     }
+
+    /**
+     * At start() we should know the position of the duck.
+     */
+    @Override
     public void start() {
         newState(State.STATE_INITIAL);
         runtime.reset();
     }
+
+    @Override
     public void loop() {
         Motion.updateRobotPose();
+
+        // report the current state
         telemetry.addData("current state", currState);
+
         switch(currState){
-            // vision needs to occur in STATE_INTIAL
+            // we need to start moving
             case STATE_INITIAL:
-                if (test_num == 2) {
-                    newState(AutoDrive.State.STATE_FORWARD);
-                    telemetry.addData("Object reached State", "");
-                    dcmotorLeft.setTargetPosition(0);
-                    dcmotorRight.setTargetPosition(0);
-                }
+                // start moving
+                Motion.moveInches(10.);
+                newState(AutoDrive.State.STATE_FORWARD);
                 break;
+
             case STATE_FORWARD:
-                // get current position,
-                dcmotorLeft.setPower(.5);
-                dcmotorRight.setPower(.5);
-                Motion.moveForward(10);
                 // Loop while the motor is moving to the target
-                while(dcmotorLeft.isBusy()) {
-                    // Let the drive team see that we're waiting on the motor
-                    telemetry.addData("Status", "Waiting for the motor to reach its target");
-                    telemetry.update();
+                if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
+
+                    // the robot has finished moving.
+                    // give it new command
+                    Motion.headTowardInches(-12,-24);
+
+                    newState(State.STATE_TURN);
                 }
-                newState(State.STATE_TURN);
                 break;
-            case STATE_DROP_FREIGHT:
-                dcmotorLeft.setPower(.5);
-                dcmotorRight.setPower(.5);
-                int runtime = 0;
-                //enter code for moving arm
-                while(runtime >= 2){
-                    continue;
-                }
-                newState(State.STATE_TURN);
-                break;
+
             case STATE_TURN:
-                dcmotorLeft.setPower(.5);
-                dcmotorRight.setPower(.5);
-                Motion.headTowardInches(-12,-24);
-                double dis = Motion.distanceToInches(-12,-24);
-                Motion.moveForward(dis);
-                while(dcmotorLeft.isBusy()) {
-                    // Let the drive team see that we're waiting on the motor
-                    telemetry.addData("Status", "Waiting for the motor to reach its target");
-                    telemetry.update();
+                // I'm executing a turn right now.
+
+                // have we completed the turn?
+                if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
+                    // calculate the distance we need to go
+                    double dis = Motion.distanceToInches(-12,-24);
+                    // start the next movement
+                    Motion.moveInches(dis);
+
+                    newState(State.STATE_DROP_FREIGHT);
                 }
-                newState(State.STATE_BACKUP);
                 break;
+
+            case STATE_DROP_FREIGHT:
+                // have we finished moving?
+                if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
+                    // we are at the alliance hub
+                    Motion.moveInches(-5.0);
+
+                    newState(State.STATE_TURN);
+                }
+                break;
+
             case STATE_BACKUP:
-                dcmotorLeft.setPower(.5);
-                dcmotorRight.setPower(.5);
-                Motion.moveForward(-5);
-                while(dcmotorLeft.isBusy()) {
-                    // Let the drive team see that we're waiting on the motor
-                    telemetry.addData("Status", "Waiting for the motor to reach its target");
-                    telemetry.update();
+                // have we finished backing up?
+                if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
+                    // head toward the warehouse
+                    Motion.headTowardInches(48,-48);
+                    newState(State.STATE_TURN_TOWARD_WAREHOUSE);
                 }
-                newState(State.STATE_TURN_TOWARD_WAREHOUSE);
                 break;
+
             case STATE_TURN_TOWARD_WAREHOUSE:
-                dcmotorLeft.setPower(.5);
-                dcmotorRight.setPower(.5);
-                Motion.updateRobotPose();
-                Motion.headTowardInches(48,-48);
-                double distanceMoveW = Motion.distanceToInches(48,-48);
-                Motion.moveForward(distanceMoveW);
-                while(dcmotorLeft.isBusy()) {
-                    // Let the drive team see that we're waiting on the motor
-                    telemetry.addData("Status", "Waiting for the motor to reach its target");
-                    telemetry.update();
+                // have we finished the turn?
+                if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
+                    double distanceMoveW = Motion.distanceToInches(48,-48);
+                    // start moving that distance to the warehouse
+                    Motion.moveInches(distanceMoveW);
+                    newState(State.STATE_FORWARD_WAREHOUSE);
                 }
                 break;
+
+            case STATE_FORWARD_WAREHOUSE:
+                if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
+
+                    newState(State.STATE_STOP);
+                }
+                break;
+
+            case STATE_STOP:
+                break;
+
         }
-        }
+    }
+
+    @Override
     public void stop() {
         dcmotorLeft.setPower(0);
         dcmotorRight.setPower(0);
     }
+
     public void newState(AutoDrive.State newState) {
         //reset state time, change to next state
         currStateTime.reset();

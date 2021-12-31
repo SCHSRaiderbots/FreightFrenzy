@@ -457,6 +457,8 @@ public class Motion {
         return Math.hypot(x-xPoseInches, y-yPoseInches);
     }
     static void moveForward(double inches) {
+        // the 288 is a magic for a CoreHex motor.
+        // It is not appropriate for an UltraPlanetary
         double ticksperinch = (288) / (90  * Math.PI  * (inches / 25.4));
         int ticks = (int)(inches * ticksperinch);
         dcmotorLeft.setTargetPosition(dcmotorLeft.getCurrentPosition() + ticks);

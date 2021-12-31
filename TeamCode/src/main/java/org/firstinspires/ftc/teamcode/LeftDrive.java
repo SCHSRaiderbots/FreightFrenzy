@@ -49,7 +49,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Basic: Iterative OpMode", group="Iterative Opmode")
+@Autonomous(name="Basic: Left Drive", group="Iterative Opmode")
 public class LeftDrive extends OpMode
 {
     // Declare OpMode members.
