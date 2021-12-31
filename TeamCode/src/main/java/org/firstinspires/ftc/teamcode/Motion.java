@@ -56,6 +56,7 @@ public class Motion {
     public enum Robot {
         ROBOT_2018, ROBOT_2019, ROBOT_2020, ROBOT_2021
     }
+    /** The robot being used. Defaults to ROBOT_2021. */
     public static Robot robot = Robot.ROBOT_2021;
 
     // robot parameters
@@ -115,6 +116,13 @@ public class Motion {
         if (touch != null) {
             // found the 2018 robot
             robot = Robot.ROBOT_2018;
+            return;
+        }
+
+        DcMotorEx dcMotorEx = hardwareMap.tryGet(DcMotorEx.class, "left_drive");
+        if (dcMotorEx != null) {
+            // found the 2020 robot
+            robot = Robot.ROBOT_2020;
         }
     }
 
@@ -226,6 +234,10 @@ public class Motion {
         distpertickRight = mWheelDiameterRight * Math.PI / (ticksPerWheelRev);
     }
 
+    /**
+     * Set import dimensions of the robot.
+     * Depends on variable robot.
+     */
     static void setRobotDims() {
         switch (robot) {
             case ROBOT_2018:

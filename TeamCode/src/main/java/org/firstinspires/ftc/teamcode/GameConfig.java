@@ -74,7 +74,7 @@ public class GameConfig {
     public enum LocationEnd {
         WAREHOUSE_INNER(50.0, -20.0),
         WAREHOUSE_OUTER(50.0, -40.0),
-        STORAGE_UNIT(-60.0, -40.0);
+        STORAGE_UNIT(-60.0, -36.0);
 
         /** robot ending x-position (inches) */
         final double x;
