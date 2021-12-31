@@ -40,7 +40,7 @@ public class AutoDrive extends OpMode {
         // step (using the FTC Robot Controller app on the phone).
         dcmotorLeft  = hardwareMap.get(DcMotorEx.class, "left_drive");
         dcmotorRight = hardwareMap.get(DcMotorEx.class, "right_drive");
-
+        Motion.setRobotMotors(dcmotorLeft, dcmotorRight);
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         dcmotorLeft.setDirection(DcMotor.Direction.FORWARD);
@@ -59,6 +59,8 @@ public class AutoDrive extends OpMode {
         //rightMotor.setPower(1);
 
         currState = AutoDrive.State.STATE_INITIAL;
+        Motion.setRobotDims2020();
+
     }
     public void init_loop() {
     }
@@ -67,6 +69,7 @@ public class AutoDrive extends OpMode {
         runtime.reset();
     }
     public void loop() {
+        Motion.updateRobotPose();
         telemetry.addData("current state", currState);
         switch(currState){
             // vision needs to occur in STATE_INTIAL
@@ -90,6 +93,7 @@ public class AutoDrive extends OpMode {
                     telemetry.update();
                 }
                 newState(State.STATE_TURN);
+                break;
             case STATE_DROP_FREIGHT:
                 dcmotorLeft.setPower(.5);
                 dcmotorRight.setPower(.5);
@@ -99,10 +103,10 @@ public class AutoDrive extends OpMode {
                     continue;
                 }
                 newState(State.STATE_TURN);
+                break;
             case STATE_TURN:
                 dcmotorLeft.setPower(.5);
                 dcmotorRight.setPower(.5);
-                Motion.updateRobotPose();
                 Motion.headTowardInches(-12,-24);
                 double dis = Motion.distanceToInches(-12,-24);
                 Motion.moveForward(dis);
@@ -112,27 +116,37 @@ public class AutoDrive extends OpMode {
                     telemetry.update();
                 }
                 newState(State.STATE_BACKUP);
+                break;
             case STATE_BACKUP:
-
-
-
-
-
-
-
-
-
+                dcmotorLeft.setPower(.5);
+                dcmotorRight.setPower(.5);
+                Motion.moveForward(-5);
+                while(dcmotorLeft.isBusy()) {
+                    // Let the drive team see that we're waiting on the motor
+                    telemetry.addData("Status", "Waiting for the motor to reach its target");
+                    telemetry.update();
+                }
+                newState(State.STATE_TURN_TOWARD_WAREHOUSE);
+                break;
+            case STATE_TURN_TOWARD_WAREHOUSE:
+                dcmotorLeft.setPower(.5);
+                dcmotorRight.setPower(.5);
+                Motion.updateRobotPose();
+                Motion.headTowardInches(48,-48);
+                double distanceMoveW = Motion.distanceToInches(48,-48);
+                Motion.moveForward(distanceMoveW);
+                while(dcmotorLeft.isBusy()) {
+                    // Let the drive team see that we're waiting on the motor
+                    telemetry.addData("Status", "Waiting for the motor to reach its target");
+                    telemetry.update();
+                }
+                break;
         }
         }
-
-
     public void stop() {
-        //dcmotorLeft.setPower(0);
-        //dcmotorRight.setPower(0);
+        dcmotorLeft.setPower(0);
+        dcmotorRight.setPower(0);
     }
-
-
-
     public void newState(AutoDrive.State newState) {
         //reset state time, change to next state
         currStateTime.reset();
