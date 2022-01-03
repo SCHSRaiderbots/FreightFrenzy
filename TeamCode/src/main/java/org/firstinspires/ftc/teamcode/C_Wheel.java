@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name="Carousel Wheel", group="Linear Opmode")
+@TeleOp(name="C_Wheel", group="Linear Opmode")
 //@Disabled
 public class C_Wheel extends LinearOpMode {
 

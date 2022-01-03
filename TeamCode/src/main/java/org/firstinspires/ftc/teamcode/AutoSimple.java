@@ -53,7 +53,7 @@ public class AutoSimple extends OpMode {
         Motion.setPoseInches(0.0, 0.0, 0.0);
 
         // use the gamepad to set the game starting conditions
-        GameConfig.init(gamepad1);
+        GameConfig.init();
 
         armMotor = new ArmMotor();
         armMotor.init(hardwareMap);
@@ -86,7 +86,7 @@ public class AutoSimple extends OpMode {
         // expected 4 * pi * 9.0 cm = 113
         // Motion.moveInches(5.0);
 
-        Motion.turn(90);
+        Motion.turnDegrees(90);
 
         armMotor.intake();
     }
