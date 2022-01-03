@@ -6,7 +6,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
+//check the config for the AutoDrive code to make sure that left_Drive is assigned to right motor
+// and right_drive is assigned to left motor
 @Autonomous(name="AutoDrive", group="CodeDev")
 public class AutoDrive extends OpMode {
     // Declare OpMode members.
@@ -43,8 +44,8 @@ public class AutoDrive extends OpMode {
         Motion.setRobotMotors(dcmotorLeft, dcmotorRight);
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
-        dcmotorLeft.setDirection(DcMotor.Direction.FORWARD);
         dcmotorRight.setDirection(DcMotor.Direction.REVERSE);
+        dcmotorLeft.setDirection(DcMotor.Direction.FORWARD);
 
         // Tell the driver that initialization is complete.
         //telemetry.addData("Status", "Initialized");
@@ -79,12 +80,15 @@ public class AutoDrive extends OpMode {
     public void start() {
         newState(State.STATE_INITIAL);
         runtime.reset();
+        //Motion.setPoseInches(-36.0,-63.0, 90); original points
+        Motion.setPoseInches(-36.0,-61.5, 90);
+
     }
 
     @Override
     public void loop() {
         Motion.updateRobotPose();
-
+        telemetry.addData("Position", "%.02f %.02f %.02f", Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees);
         // report the current state
         telemetry.addData("current state", currState);
 
@@ -92,8 +96,10 @@ public class AutoDrive extends OpMode {
             // we need to start moving
             case STATE_INITIAL:
                 // start moving
-                Motion.moveInches(10.);
+                //Motion.moveInches(10.);
+                Motion.moveInches(20.); //used for testing
                 newState(AutoDrive.State.STATE_FORWARD);
+                telemetry.addData("Finished Initial State","");
                 break;
 
             case STATE_FORWARD:
@@ -102,9 +108,14 @@ public class AutoDrive extends OpMode {
 
                     // the robot has finished moving.
                     // give it new command
-                    Motion.headTowardInches(-12,-24);
+                    //Motion.headTowardInches(-12,-24);
+                    //Motion.headTowardInches(-24,-36); USE THIS!!!
+                    //Motion.headTowardInches()
+                    //Motion.turnDegrees(-90); test the accuracy
+                    Motion.headTowardInches(0,0);
 
                     newState(State.STATE_TURN);
+                    telemetry.addData("Finished Forward State","");
                 }
                 break;
 
@@ -114,11 +125,15 @@ public class AutoDrive extends OpMode {
                 // have we completed the turn?
                 if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
                     // calculate the distance we need to go
-                    double dis = Motion.distanceToInches(-12,-24);
+
+                   //double dis = Motion.distanceToInches(-24,-45);
+                    double dis = Motion.distanceToInches(0,0); //testing
                     // start the next movement
                     Motion.moveInches(dis);
 
                     newState(State.STATE_DROP_FREIGHT);
+                    newState(State.STATE_STOP);
+
                 }
                 break;
 
@@ -127,8 +142,8 @@ public class AutoDrive extends OpMode {
                 if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
                     // we are at the alliance hub
                     Motion.moveInches(-5.0);
-
-                    newState(State.STATE_TURN);
+                    newState(State.STATE_STOP);
+                    // newState(State.STATE_BACKUP);
                 }
                 break;
 
@@ -138,6 +153,7 @@ public class AutoDrive extends OpMode {
                     // head toward the warehouse
                     Motion.headTowardInches(48,-48);
                     newState(State.STATE_TURN_TOWARD_WAREHOUSE);
+                    //newState(State.STATE_STOP);
                 }
                 break;
 
