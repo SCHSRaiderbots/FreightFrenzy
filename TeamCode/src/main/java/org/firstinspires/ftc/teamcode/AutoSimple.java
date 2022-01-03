@@ -24,6 +24,8 @@ public class AutoSimple extends OpMode {
     // capture the time when Play is pressed
     double timeStart;
 
+    ArmMotor armMotor;
+
     @Override
     public void init() {
         // get the motors
@@ -43,6 +45,8 @@ public class AutoSimple extends OpMode {
         motorLeft.setPower(0.3);
         motorRight.setPower(0.3);
 
+        ArmMotor armMotor;
+
         // Odometry
         Motion.setRobotMotors(motorLeft, motorRight);
         Motion.setRobotDims2018();
@@ -50,6 +54,9 @@ public class AutoSimple extends OpMode {
 
         // use the gamepad to set the game starting conditions
         GameConfig.init(gamepad1);
+
+        armMotor = new ArmMotor();
+        armMotor.init(hardwareMap);
     }
 
     @Override
@@ -80,6 +87,8 @@ public class AutoSimple extends OpMode {
         // Motion.moveInches(5.0);
 
         Motion.turn(90);
+
+        armMotor.intake();
     }
 
     @Override
