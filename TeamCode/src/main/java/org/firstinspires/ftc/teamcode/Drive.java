@@ -11,14 +11,13 @@ import com.qualcomm.robotcore.util.Range;
 
 
 @TeleOp(name = "Basic: Linear Opmode", group="Linear Opmode")
-@Disabled
 public class Drive extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx leftDrive = null;
     private DcMotorEx rightDrive = null;
 
-    @Override
+
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
         telemetry.update();

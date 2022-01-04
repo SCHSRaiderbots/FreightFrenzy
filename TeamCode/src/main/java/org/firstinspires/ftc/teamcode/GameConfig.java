@@ -102,13 +102,23 @@ public class GameConfig {
         }
     }
 
+    /**
+     * The value of the barcode.
+     */
+    public enum BarCode {LEFT, MIDDLE, RIGHT}
+
     // set the default options
     // These are static and should continue across op mode selections
     public static Alliance alliance = Alliance.RED;
     public static LocationStart locationStart = LocationStart.AUDIENCE;
     public static LocationEnd locationEnd = LocationEnd.STORAGE_UNIT;
+    /**
+     * The barCode is calculated during .init()
+     * Assume a default of MIDDLE.
+     */
+    public static BarCode barCode = BarCode.MIDDLE;
 
-    // remember the game pad state so we can detect transitions
+    // remember the game pad state so we can detect button transitions
     static private boolean bAlliance = false;
     static private boolean bLocationStart = false;
     static private boolean bLocationEnd = false;
@@ -118,9 +128,13 @@ public class GameConfig {
      * Call during the Autonomous OpMode init() routine
      */
     static void init() {
+        // assume the buttons have not been pressed.
         bAlliance=false;
         bLocationStart = false;
         bLocationEnd = false;
+
+        // could default the barCode to BarCode.MIDDLE
+        // alternatively, leave it as whatever it was last time.
     }
 
     /**
