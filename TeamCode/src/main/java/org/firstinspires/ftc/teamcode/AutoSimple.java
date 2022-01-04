@@ -24,6 +24,7 @@ public class AutoSimple extends OpMode {
     // capture the time when Play is pressed
     double timeStart;
 
+    /** actuator at the end of the arm */
     ArmMotor armMotor;
 
     @Override
@@ -45,8 +46,6 @@ public class AutoSimple extends OpMode {
         motorLeft.setPower(0.3);
         motorRight.setPower(0.3);
 
-        ArmMotor armMotor;
-
         // Odometry
         Motion.setRobotMotors(motorLeft, motorRight);
         Motion.setRobotDims2018();
@@ -55,6 +54,7 @@ public class AutoSimple extends OpMode {
         // use the gamepad to set the game starting conditions
         GameConfig.init();
 
+        // get the actuator at the end of the arm
         armMotor = new ArmMotor();
         armMotor.init(hardwareMap);
     }
@@ -80,10 +80,6 @@ public class AutoSimple extends OpMode {
         timeStart = time;
 
         // TODO: put in Motion...
-        // motorLeft.setTargetPosition(motorLeft.getCurrentPosition() + 288 * 4);
-        // motorRight.setTargetPosition(motorRight.getCurrentPosition() + 288 * 4);
-        // On standard field, I went 112.5 cm
-        // expected 4 * pi * 9.0 cm = 113
         // Motion.moveInches(5.0);
 
         Motion.turnDegrees(90);

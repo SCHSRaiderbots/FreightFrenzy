@@ -13,13 +13,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * Furthermore, we want to carry the robot's current position from one OpMode to the next.
  * For example, an Autonomous routine might set a particular starting position.
  * At the end of the Autonomous routine, the robot will have an updated position.
- * By using static variables, the succeeding Teleop routine will know the robot's position.
+ * By using static variables, the succeeding TeleOp routine will know the robot's position.
  *
  * This code is borrowing from 2019 and 2020 robot code
  *
  * So the OpMode should:
  * tell this class which motors are being used:
- *   Motion.setRobot(dcmotorLeft, dcmotorRight);
+ *   Motion.setRobot(DcMotorLeft, DCMotorRight);
  * tell this class the robot dimensions:
  *   Motion.setRobot2019();
  * and then make periodic calls to update the robot position:
@@ -82,11 +82,11 @@ public class Motion {
 
     // the robot pose
     //   can have .updatePose(), .getPose(), .setPose()
-    //   using static should allow the Pose to be carried over from Autonomous to Teleop
+    //   using static should allow the Pose to be carried over from Autonomous to TeleOp
     //     Autonomous can set the initial pose
-    //     When Teleop starts, it can use the existing Pose
+    //     When TeleOp starts, it can use the existing Pose
     //        If there was no autonomous, then initial Pose is random
-    //        A button press during teleop's init_loop could set a known Pose
+    //        A button press during TeleOp's init_loop could set a known Pose
     // these values are in meters
     static double xPose = 0.0;
     static double yPose = 0.0;
