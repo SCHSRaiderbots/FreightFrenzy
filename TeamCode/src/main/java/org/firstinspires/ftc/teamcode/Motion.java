@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.MotorControlAlgorithm;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -171,6 +172,20 @@ public class Motion {
 
                 // set the robot dimensions
                 setRobotDims2018();
+
+                // TODO: lost the PIDF code...
+                // dcmotorRight.getMotorType()
+                //  .getMaxRPM(); -> 137 ,, 300 == 6000/20
+                //  .getTicksPerRev(); -> 288,, 560 == 20 * 28
+                //  .getAchieveableMaxTicksPerSecond 559,, 2380
+                double rpm = 120.0;
+                double revsPerSecond = rpm / 60.0;
+                double ticksPerRev = 288.0;
+                double f = 32000.0 / (ticksPerRev * revsPerSecond);
+                PIDFCoefficients pidfRUE = new PIDFCoefficients(10, 1, 0, f, MotorControlAlgorithm.PIDF);
+                PIDFCoefficients pidfR2P = new PIDFCoefficients(10, 0, 0, 0, MotorControlAlgorithm.PIDF);
+                setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRUE);
+                setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfR2P);
                 break;
 
             case ROBOT_2019:
@@ -261,6 +276,7 @@ public class Motion {
 
     /**
      * Set the drive motor target velocities. (RunMode should be RUN_USING_ENCODER.)
+     * TODO: velocity is not abstract; it is ticksPerSecond
      * @param velocityLeft velocity for left motor
      * @param velocityRight velocity for right motor
      */
