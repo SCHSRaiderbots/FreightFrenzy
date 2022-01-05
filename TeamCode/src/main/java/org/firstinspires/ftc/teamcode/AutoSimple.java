@@ -21,6 +21,9 @@ public class AutoSimple extends OpMode {
     /** actuator at the end of the arm */
     ArmMotor armMotor;
 
+    enum State {STATE_INITIAL, STATE_RUNNING, STATE_TURNING, STATE_FINAL}
+    State state = State.STATE_INITIAL;
+
     @Override
     public void init() {
         // initialize Motion operations
@@ -47,6 +50,9 @@ public class AutoSimple extends OpMode {
         GameConfig.init_loop(gamepad1);
         // report the starting conditions
         GameConfig.report(telemetry);
+
+        // report the current bar code
+        telemetry.addData("Barcode", GameConfig.barCode);
     }
 
     @Override
@@ -54,12 +60,11 @@ public class AutoSimple extends OpMode {
         // keep updating the robot pose
         Motion.updateRobotPose();
 
-        // report the start
-        telemetry.addData("OpMode", "start");
+        // remember start time
         timeStart = time;
 
-        Motion.moveInches(20.0);
-        // Motion.turnDegrees(90);
+        // set initial state
+        state = State.STATE_INITIAL;
 
         armMotor.intake();
     }
@@ -68,13 +73,39 @@ public class AutoSimple extends OpMode {
     public void loop() {
         // keep updating the robot pose
         Motion.updateRobotPose();
+        // report the position
+        Motion.reportPosition(telemetry);
 
-        // does nothing
+        // show that the variable time updates...
         telemetry.addData("time", "%8.3f", 30.0 - (time-timeStart));
-        telemetry.addData("pos (in)", "x: %8.1f, y: %8.1f, theta %8.1f",
-                Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees);
-        telemetry.addData("pos (m) ", "x: %8.3f, y: %8.3f, theta %8.1f",
-                Motion.xPose, Motion.yPose, Motion.thetaPoseDegrees);
+
+        telemetry.addData("State", state);
+        switch (state) {
+            case STATE_INITIAL:
+                // start moving forward
+                Motion.moveInches(20.0);
+                state = State.STATE_RUNNING;
+                break;
+
+            case STATE_RUNNING:
+                // we are running forward
+                if (Motion.finished()) {
+                    Motion.turnDegrees(-90.0);
+                    state = State.STATE_TURNING;
+                }
+                break;
+
+            case STATE_TURNING:
+                // we are turning right
+                if (Motion.finished()) {
+                    state = State.STATE_FINAL;
+                }
+                break;
+
+            case STATE_FINAL:
+                // we are sitting pretty
+                break;
+        }
     }
 
     @Override

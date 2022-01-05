@@ -17,6 +17,7 @@ import java.util.Locale;
 public class DriveSimple extends OpMode {
     // distance sensor
     DistanceSensor distanceSensorRev2m;
+    ArmMotor armMotor;
 
     @Override
     public void init() {
@@ -33,6 +34,10 @@ public class DriveSimple extends OpMode {
         // try to get the Rev 2m distance sensor
         distanceSensorRev2m = hardwareMap.tryGet(DistanceSensor.class, "rev2meter");
 
+        // get the end actuator
+        armMotor = new ArmMotor();
+        armMotor.init(hardwareMap);
+
         // report the initialization
         telemetry.addData("Drive motors", "initialized");
     }
@@ -43,9 +48,7 @@ public class DriveSimple extends OpMode {
         Motion.updateRobotPose();
 
         // report position
-        telemetry.addData("position (inches)",
-                String.format((Locale)null, "(%6.01f %6.01f) %6.01f",
-                        Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees));
+        Motion.reportPosition(telemetry);
 
         // if we have a 2m distance sensor
         if (distanceSensorRev2m != null) {
@@ -74,9 +77,15 @@ public class DriveSimple extends OpMode {
         Motion.updateRobotPose();
 
         // report position
-        telemetry.addData("position",
-                String.format((Locale)null, "%6.01f %6.01f %6.01f",
-                        Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees));
+        Motion.reportPosition(telemetry);
+
+        // use the game pad to operate the intake
+        if (gamepad1.a) {
+            armMotor.intake();
+        }
+        if (gamepad1.b) {
+            armMotor.outtake();
+        }
 
         // use game pad 1 button a to reset the pose
         if (gamepad1.x) {

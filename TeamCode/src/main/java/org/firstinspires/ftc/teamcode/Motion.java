@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.hardware.rev.RevTouchSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -8,7 +10,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.MotorControlAlgorithm;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
+import java.util.Locale;
 
 /**
  * This class consolidates some of the robot motion calculations.
@@ -534,8 +539,20 @@ public class Motion {
      * @return true if both drive motors are close to target
      */
     static boolean finished() {
-        if (dcmotorLeft.isBusy()) return false;
-        return !dcmotorRight.isBusy();
+        // if either motor is busy, return false
+        if (dcmotorLeft.isBusy() ||  dcmotorRight.isBusy())
+            return false;
+        else {
+            // robot reached the position!
+
+            // log the position at the instant of success
+            Log.d("Motion.finished()",
+                    String.format("Pose (%.02f, %.02f) inches, heading %.01f degrees",
+                        Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees));
+
+            // return true
+            return true;
+        }
     }
 
     /**
@@ -649,6 +666,12 @@ public class Motion {
         // currently at (xPoseInches, yPoseInches)
         // d = sqrt((x1 -x2)^2 + (y1-y2)^2 )
         return Math.hypot(x-xPoseInches, y-yPoseInches);
+    }
+
+    static void reportPosition(Telemetry telemetry) {
+        telemetry.addData("position",
+                String.format((Locale)null, "(%6.01f %6.01f) inches, heading %6.01f degrees",
+                        xPoseInches, yPoseInches, thetaPoseDegrees));
     }
 
 }
