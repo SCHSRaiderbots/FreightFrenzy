@@ -2,8 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -16,49 +15,20 @@ import java.util.Locale;
  */
 @TeleOp(name="DriveSimple", group="CodeDev")
 public class DriveSimple extends OpMode {
-    DcMotorEx motorLeft = null;
-    DcMotorEx motorRight = null;
-
     // distance sensor
     DistanceSensor distanceSensorRev2m;
 
     @Override
     public void init() {
-        {
-            // TODO: https://docs.ftclib.org/ftclib/
+        // TODO: https://docs.ftclib.org/ftclib/
 
-            // SERVO MAX_POSITION, MIN_POSITION
-
-            LogDevice.dumpFirmware(hardwareMap);
-        }
+        // SERVO MAX_POSITION, MIN_POSITION
 
         // Want to put all the motion code in the Motion class
         Motion.init(hardwareMap);
 
-        // get the motors
-        motorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
-        motorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
-
-        LogDevice.dump("motorLeft", motorLeft);
-        LogDevice.dump("motorRight", motorRight);
-
-        // TODO: may be able to fix some HD gearing issues.
-
-        // set the motor directions
-        motorLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorRight.setDirection(DcMotorSimple.Direction.FORWARD);
-
-        // TODO: for UltraPlanetary
-        motorLeft.setDirection(DcMotorSimple.Direction.FORWARD);
-        motorRight.setDirection(DcMotorSimple.Direction.REVERSE);
-
         // Odometry
-        Motion.setRobotMotors(motorLeft, motorRight);
-        // Motion.setRobotDims2018();
-        // TODO: RobotDims
-        // Motion.setRobotDims2021();
-        Motion.setRobotDims2020();
-        Motion.setPoseInches(0.0, 0.0, 0.0);
+        // -- use the pose from the previous run...
 
         // try to get the Rev 2m distance sensor
         distanceSensorRev2m = hardwareMap.tryGet(DistanceSensor.class, "rev2meter");
@@ -89,6 +59,13 @@ public class DriveSimple extends OpMode {
     public void start() {
         // Odometry
         Motion.updateRobotPose();
+
+        // use velocity control
+        Motion.setVelocity(0.0);
+        Motion.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // set the power level
+        Motion.setPower(0.3);
     }
 
     @Override
@@ -102,12 +79,9 @@ public class DriveSimple extends OpMode {
                         Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees));
 
         // use game pad 1 button a to reset the pose
-        if (gamepad1.a) {
+        if (gamepad1.x) {
             Motion.setPoseInches(0.0, 0.0, 0.0);
         }
-
-        // value for conversion
-        // double power = 200.0;
 
         // TODO: use abstract units
         double power = 1000.0;
@@ -119,12 +93,7 @@ public class DriveSimple extends OpMode {
         double powerLeft = -gamepad1.left_stick_y * power;
         double powerRight = -gamepad1.right_stick_y * power;
 
-        // set the motor power levels
-        motorLeft.setPower(0.3);
-        motorRight.setPower(0.3);
-
-        motorLeft.setVelocity(powerLeft);
-        motorRight.setVelocity(powerRight);
+        Motion.setVelocity(powerLeft, powerRight);
 
         // report the power levels
         telemetry.addData("Drive motors", String.format((Locale)null, "%.03f %.03f", powerLeft, powerRight));

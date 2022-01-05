@@ -5,6 +5,7 @@ import android.util.Log;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
@@ -189,5 +190,13 @@ class LogDevice {
         Log.d(TAG, "  position: " + servo.getPosition());
     }
 
-    // TODO: Gamepad.Type
+    /**
+     * Dump a gamepad
+     * @param name name of the gamepad
+     * @param gamepad the gamepad device
+     */
+    static void dump(String name, Gamepad gamepad) {
+        Log.d(TAG, "gamepad information for " + name);
+        Log.d(TAG, "  type: " + gamepad.type);
+    }
 }

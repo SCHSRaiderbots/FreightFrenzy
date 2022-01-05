@@ -2,9 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 /**
  * A simple Autonomous routine.
@@ -18,9 +15,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
  */
 @Autonomous(name = "AutoSimple", group = "Production")
 public class AutoSimple extends OpMode {
-    DcMotorEx motorLeft = null;
-    DcMotorEx motorRight = null;
-
     // capture the time when Play is pressed
     double timeStart;
 
@@ -29,26 +23,10 @@ public class AutoSimple extends OpMode {
 
     @Override
     public void init() {
-        // get the motors
-        motorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
-        motorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
-
-        // set the motor directions
-        motorLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorRight.setDirection(DcMotorSimple.Direction.FORWARD);
-
-        // TODO: put in Motion
-        // set Run to Position mode
-        motorLeft.setTargetPosition(motorLeft.getCurrentPosition());
-        motorRight.setTargetPosition(motorRight.getCurrentPosition());
-        motorLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorLeft.setPower(0.3);
-        motorRight.setPower(0.3);
+        // initialize Motion operations
+        Motion.init(hardwareMap);
 
         // Odometry
-        Motion.setRobotMotors(motorLeft, motorRight);
-        Motion.setRobotDims2018();
         Motion.setPoseInches(0.0, 0.0, 0.0);
 
         // use the gamepad to set the game starting conditions
@@ -57,6 +35,7 @@ public class AutoSimple extends OpMode {
         // get the actuator at the end of the arm
         armMotor = new ArmMotor();
         armMotor.init(hardwareMap);
+        armMotor.outtake();
     }
 
     @Override
@@ -79,10 +58,8 @@ public class AutoSimple extends OpMode {
         telemetry.addData("OpMode", "start");
         timeStart = time;
 
-        // TODO: put in Motion...
-        // Motion.moveInches(5.0);
-
-        Motion.turnDegrees(90);
+        Motion.moveInches(20.0);
+        // Motion.turnDegrees(90);
 
         armMotor.intake();
     }
