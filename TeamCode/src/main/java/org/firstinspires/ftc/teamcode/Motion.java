@@ -126,6 +126,10 @@ public class Motion {
     static private int cEncoderLeft;
     static private int cEncoderRight;
 
+    // choose a drive mode
+    enum DriveMode {TANK, ARCADE}
+    static DriveMode driveMode = DriveMode.ARCADE;
+
     /**
      * Look at the hardwareMap to figure out which robot is being used.
      * @param hardwareMap the robot configuration information
@@ -397,7 +401,8 @@ public class Motion {
 
         // set the wheel half separation
         // measured wheel separation times a fudge factor
-        distWheel = (0.345) / 2;
+        // TODO: fudge is significant; also some drift to the right
+        distWheel = (5.0/4.316) * (0.343) / 2;
 
         // ticks per wheel revolution
         // The motor has a 20-tooth sprocket, and the wheel has a 15-tooth sprocket.

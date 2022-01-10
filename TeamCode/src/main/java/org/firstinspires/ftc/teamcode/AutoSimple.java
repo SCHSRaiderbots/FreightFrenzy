@@ -66,7 +66,7 @@ public class AutoSimple extends OpMode {
         // set initial state
         state = State.STATE_INITIAL;
 
-        armMotor.intake();
+        armMotor.outtake();
     }
 
     @Override
@@ -83,8 +83,10 @@ public class AutoSimple extends OpMode {
         switch (state) {
             case STATE_INITIAL:
                 // start moving forward
-                Motion.moveInches(20.0);
+                // Motion.moveInches(20.0);
+                Motion.turnDegrees(1800);
                 state = State.STATE_RUNNING;
+                state = State.STATE_FINAL;
                 break;
 
             case STATE_RUNNING:
