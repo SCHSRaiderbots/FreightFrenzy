@@ -18,6 +18,7 @@ public class DriveSimple extends OpMode {
     // distance sensor
     DistanceSensor distanceSensorRev2m;
     ArmMotor armMotor;
+    Carousel carousel;
 
     @Override
     public void init() {
@@ -37,6 +38,10 @@ public class DriveSimple extends OpMode {
         // get the end actuator
         armMotor = new ArmMotor();
         armMotor.init(hardwareMap);
+
+        //get the carousel
+        carousel = new Carousel();
+        carousel.init(hardwareMap);
 
         // report the initialization
         telemetry.addData("Drive motors", "initialized");
@@ -68,7 +73,7 @@ public class DriveSimple extends OpMode {
         Motion.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // set the power level
-        Motion.setPower(0.3);
+        Motion.setPower(0.8);
     }
 
     @Override
@@ -87,25 +92,37 @@ public class DriveSimple extends OpMode {
             armMotor.outtake();
         }
 
-        // use game pad 1 button a to reset the pose
+        carousel.spin(gamepad1.right_trigger);
+
+        // use game pad 1 button x to reset the pose
         if (gamepad1.x) {
             Motion.setPoseInches(0.0, 0.0, 0.0);
         }
 
         // TODO: use abstract units
         double power = 1000.0;
+        double velLeft = 0.0;
+        double velRight = 0.0;
 
         // TODO: arcade drive
         // TODO: quadratic drive
-
-        // get the operator commands
-        double powerLeft = -gamepad1.left_stick_y * power;
-        double powerRight = -gamepad1.right_stick_y * power;
-
-        Motion.setVelocity(powerLeft, powerRight);
+        switch (Motion.driveMode) {
+            case TANK:
+                velLeft = -gamepad1.left_stick_y * power;
+                velRight = -gamepad1.right_stick_y * power;
+                break;
+            case ARCADE:
+            default:
+                double turn = 0.3 * gamepad1.left_stick_x * power;
+                double vel = -gamepad1.right_stick_y * power;
+                velLeft = vel - turn;
+                velRight = vel + turn;
+                break;
+        }
+        Motion.setVelocity(velLeft, velRight);
 
         // report the power levels
-        telemetry.addData("Drive motors", String.format((Locale)null, "%.03f %.03f", powerLeft, powerRight));
+        telemetry.addData("Drive motors", String.format((Locale)null, "%.03f %.03f", velLeft, velRight));
 
         // if we have a 2m distance sensor
         if (distanceSensorRev2m != null) {
