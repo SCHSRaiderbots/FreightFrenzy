@@ -1,11 +1,19 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.rev.RevTouchSensor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
+import android.util.Log;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.SensorDigitalTouch;
+import com.qualcomm.hardware.rev.RevTouchSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.MotorControlAlgorithm;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
+import java.util.Locale;
 
 /**
  * This class consolidates some of the robot motion calculations.
@@ -13,13 +21,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * Furthermore, we want to carry the robot's current position from one OpMode to the next.
  * For example, an Autonomous routine might set a particular starting position.
  * At the end of the Autonomous routine, the robot will have an updated position.
- * By using static variables, the succeeding Teleop routine will know the robot's position.
+ * By using static variables, the succeeding TeleOp routine will know the robot's position.
  *
  * This code is borrowing from 2019 and 2020 robot code
  *
  * So the OpMode should:
  * tell this class which motors are being used:
- *   Motion.setRobot(dcmotorLeft, dcmotorRight);
+ *   Motion.setRobot(DcMotorLeft, DCMotorRight);
  * tell this class the robot dimensions:
  *   Motion.setRobot2019();
  * and then make periodic calls to update the robot position:
@@ -52,10 +60,21 @@ public class Motion {
     public static final double HD_HEX_GEAR_CART_4_1 = 76.0/21.0;
     public static final double HD_HEX_GEAR_CART_5_1 = 68.0/13.0;
 
-    // Info about the actual robot
+    /**
+     * Identity and Info about the actual robot
+     * properties?
+     *   wheel diameter
+     *   gear ratio? information for ticks per wheel rotation
+     *   wheel half separation
+     *   width
+     *   length
+     *   center of rotation
+     *   camera location (x, y, z, rx, ry, rz)
+     */
     public enum Robot {
-        ROBOT_2018, ROBOT_2019, ROBOT_2020, ROBOT_2021
+        ROBOT_2018, ROBOT_2019, ROBOT_2020, ROBOT_2021, ROBOT_MECANUM
     }
+    /** The robot being used. Defaults to ROBOT_2021. */
     public static Robot robot = Robot.ROBOT_2021;
 
     // robot parameters
@@ -81,18 +100,18 @@ public class Motion {
 
     // the robot pose
     //   can have .updatePose(), .getPose(), .setPose()
-    //   using static should allow the Pose to be carried over from Autonomous to Teleop
+    //   using static should allow the Pose to be carried over from Autonomous to TeleOp
     //     Autonomous can set the initial pose
-    //     When Teleop starts, it can use the existing Pose
+    //     When TeleOp starts, it can use the existing Pose
     //        If there was no autonomous, then initial Pose is random
-    //        A button press during teleop's init_loop could set a known Pose
+    //        A button press during TeleOp's init_loop could set a known Pose
     // these values are in meters
     static double xPose = 0.0;
     static double yPose = 0.0;
     // angle is in radians
     static double thetaPose = 0.0;
 
-    // TODO: use better plan for values that must stay in sync
+    // Inch versions of the robot pose
     static double xPoseInches = 0.0;
     static double yPoseInches = 0.0;
     static double thetaPoseDegrees = 0.0;
@@ -107,16 +126,122 @@ public class Motion {
     static private int cEncoderLeft;
     static private int cEncoderRight;
 
-    static void init(HardwareMap hardwareMap) {
-        // identify the robot
+    /**
+     * Look at the hardwareMap to figure out which robot is being used.
+     * @param hardwareMap the robot configuration information
+     */
+    static void identifyRobot(HardwareMap hardwareMap) {
 
         // if it has a robot2018 touch sensor, then it is a 2018 robot...
         RevTouchSensor touch = hardwareMap.tryGet(RevTouchSensor.class, "robot2018");
         if (touch != null) {
             // found the 2018 robot
             robot = Robot.ROBOT_2018;
+            return;
         }
+
+        // the 2020 robot configuration uses left_drive and right_drive.
+        DcMotorEx dcMotorEx = hardwareMap.tryGet(DcMotorEx.class, "left_drive");
+        if (dcMotorEx != null) {
+            // found the 2020 robot
+            robot = Robot.ROBOT_2020;
+        }
+
     }
+
+    /**
+     * Initialize the robot motion information.
+     * @param hardwareMap the robot configuration information
+     */
+    static void init(HardwareMap hardwareMap) {
+        // dump the firmware
+        LogDevice.dumpFirmware(hardwareMap);
+
+        // identify the robot
+        identifyRobot(hardwareMap);
+
+        // initialize the robot
+        switch (robot) {
+            case ROBOT_MECANUM:
+                // TODO: give up on mecanum
+                break;
+
+            case ROBOT_2018:
+                // get the motors
+                dcmotorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
+                dcmotorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
+
+                // set the motor directions
+                dcmotorLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+                dcmotorRight.setDirection(DcMotorSimple.Direction.FORWARD);
+
+                // set the robot dimensions
+                setRobotDims2018();
+
+                // TODO: lost the PIDF code...
+                // dcmotorRight.getMotorType()
+                //  .getMaxRPM(); -> 137 ,, 300 == 6000/20
+                //  .getTicksPerRev(); -> 288,, 560 == 20 * 28
+                //  .getAchieveableMaxTicksPerSecond 559,, 2380
+                double rpm = 120.0;
+                double revsPerSecond = rpm / 60.0;
+                double ticksPerRev = 288.0;
+                double f = 32000.0 / (ticksPerRev * revsPerSecond);
+                PIDFCoefficients pidfRUE = new PIDFCoefficients(10, 1, 0, f, MotorControlAlgorithm.PIDF);
+                PIDFCoefficients pidfR2P = new PIDFCoefficients(10, 0, 0, 0, MotorControlAlgorithm.PIDF);
+                setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRUE);
+                setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfR2P);
+                break;
+
+            case ROBOT_2019:
+                setRobotDims2019();
+                break;
+
+            case ROBOT_2020:
+                // get the motors
+                dcmotorLeft = hardwareMap.get(DcMotorEx.class, "left_drive");
+                dcmotorRight = hardwareMap.get(DcMotorEx.class, "right_drive");
+
+                // set the motor directions
+                dcmotorLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+                dcmotorRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+                setRobotDims2020();
+                break;
+
+            case ROBOT_2021:
+            default:
+                // get the motors
+                dcmotorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
+                dcmotorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
+
+                // set the motor directions
+                dcmotorLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+                dcmotorRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+                setRobotDims2021();
+                break;
+        }
+
+        // remember the current encoder counts to do odometry
+        // DcMotor Direction also affects the encoder counts
+        // remember the current encoder counts
+        // Should always do this (even if not resetting the Pose)
+        cEncoderLeft = dcmotorLeft.getCurrentPosition();
+        cEncoderRight = dcmotorRight.getCurrentPosition();
+
+        // set Run to Position mode
+        dcmotorLeft.setTargetPosition(dcmotorLeft.getCurrentPosition());
+        dcmotorRight.setTargetPosition(dcmotorRight.getCurrentPosition());
+        setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // set the power level
+        setPower(0.3);
+
+        // dump the motors
+        LogDevice.dump("dcmotorLeft", dcmotorLeft);
+        LogDevice.dump("dcmotorRight", dcmotorRight);
+}
 
     /**
      * Odometry must know which motors are being used...
@@ -133,6 +258,63 @@ public class Motion {
         // Should always do this (even if not resetting the Pose)
         cEncoderLeft = dcmotorLeft.getCurrentPosition();
         cEncoderRight = dcmotorRight.getCurrentPosition();
+    }
+
+    /**
+     * Set the drive motor power levels.
+     * @param power power level (0 to 1)
+     */
+    static void setPower(double power) {
+        dcmotorLeft.setPower(power);
+        dcmotorRight.setPower(power);
+    }
+
+    /**
+     * Set the drive motor power levels.
+     * @param powerLeft power level for left motor
+     * @param powerRight power level for right motor
+     */
+    static void setPower(double powerLeft, double powerRight) {
+        dcmotorLeft.setPower(powerLeft);
+        dcmotorRight.setPower(powerRight);
+    }
+
+    /**
+     * Set the drive motor target velocities. (RunMode should be RUN_USING_ENCODER.)
+     * TODO: velocity is not abstract; it is ticksPerSecond
+     * @param velocityLeft velocity for left motor
+     * @param velocityRight velocity for right motor
+     */
+    static void setVelocity(double velocityLeft, double velocityRight) {
+        dcmotorLeft.setVelocity(velocityLeft);
+        dcmotorRight.setVelocity(velocityRight);
+    }
+
+    /**
+     * Set the drive motor target velocity. (RunMode should be RUN_USING_ENCODER.)
+     * @param velocity velocity for the motors
+     */
+    static void setVelocity(double velocity) {
+        setVelocity(velocity, velocity);
+    }
+
+    /**
+     * Set the DcMotor mode for the drive motors.
+     * @param runMode RunMode to use, e.g., RunMode.RUN_TO_POSITION.
+     */
+    static void setMode(DcMotor.RunMode runMode) {
+        dcmotorLeft.setMode(runMode);
+        dcmotorRight.setMode(runMode);
+    }
+
+    /**
+     * Set the drive motor PIDF coefficients for a particular mode.
+     * @param runMode run mode to modify
+     * @param pidfCoefficients the desired coefficients
+     */
+    static void setPIDFCoefficients(DcMotor.RunMode runMode, PIDFCoefficients pidfCoefficients) {
+        dcmotorLeft.setPIDFCoefficients(runMode, pidfCoefficients);
+        dcmotorRight.setPIDFCoefficients(runMode, pidfCoefficients);
     }
 
     /*
@@ -206,7 +388,7 @@ public class Motion {
     }
 
     /**
-     * Set Robot Dims for the Freight Frenzy robot
+     * Set Robot Dims for the Freight Frenzy robot.
      */
     static void setRobotDims2021() {
         // set the wheel diameters to 90 mm
@@ -218,7 +400,8 @@ public class Motion {
         distWheel = (0.345) / 2;
 
         // ticks per wheel revolution
-        // TODO: OMG! Motor has 20 tooth and wheel has 15 tooth; also means set F based gear ratio
+        // The motor has a 20-tooth sprocket, and the wheel has a 15-tooth sprocket.
+        // Also means set PIDF.F based upon the gear ratio
         ticksPerWheelRev = HD_HEX_TICKS_PER_REV * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1 * 15.0 / 20.0;
 
         // derived values
@@ -226,6 +409,10 @@ public class Motion {
         distpertickRight = mWheelDiameterRight * Math.PI / (ticksPerWheelRev);
     }
 
+    /**
+     * Set the important dimensions of the robot.
+     * Depends on variable robot.
+     */
     static void setRobotDims() {
         switch (robot) {
             case ROBOT_2018:
@@ -259,32 +446,32 @@ public class Motion {
         int ticksRight = dcmotorRight.getCurrentPosition();
 
         // calculate change in encoder ticks from last time step
-        int dticksLeft = ticksLeft - cEncoderLeft;
-        int dticksRight = ticksRight - cEncoderRight;
+        int deltaTicksLeft = ticksLeft - cEncoderLeft;
+        int deltaTicksRight = ticksRight - cEncoderRight;
 
         // save the new encoder positions for the next time around
         cEncoderLeft = ticksLeft;
         cEncoderRight = ticksRight;
 
         // calculate the distance the wheels moved
-        double distL = dticksLeft * distpertickLeft;
-        double distR = dticksRight * distpertickRight;
+        double distL = deltaTicksLeft * distpertickLeft;
+        double distR = deltaTicksRight * distpertickRight;
 
         // approximate the arc length as the average of the left and right arcs
         double ds = (distR + distL) / 2;
         // approximate the angular change as the difference in the arcs divided by wheel offset from
         // center of rotation.
-        double dtheta = (distR - distL) / ( 2 * distWheel);
+        double deltaTheta = (distR - distL) / ( 2 * distWheel);
 
         // approximate the hypotenuse as just ds
         // approximate the average change in direction as one half the total angular change
-        double dx = ds * Math.cos(thetaPose + 0.5 * dtheta);
-        double dy = ds * Math.sin(thetaPose + 0.5 * dtheta);
+        double dx = ds * Math.cos(thetaPose + 0.5 * deltaTheta);
+        double dy = ds * Math.sin(thetaPose + 0.5 * deltaTheta);
 
         // update the current pose
         xPose = xPose + dx;
         yPose = yPose + dy;
-        thetaPose = thetaPose + dtheta;
+        thetaPose = thetaPose + deltaTheta;
 
         // convert to inches and degrees
         xPoseInches = xPose / 0.0254;
@@ -293,7 +480,7 @@ public class Motion {
     }
 
     /***
-     * Set the current robot pose
+     * Set the current robot pose.
      * @param x robot x position in inches
      * @param y robot y position in inches
      * @param theta robot orientation in degrees
@@ -311,7 +498,7 @@ public class Motion {
     }
 
     /**
-     * Get the current position tolerance in meters
+     * Get the current position tolerance in meters.
      * @return tolerance in meters
      */
     static double getMotorToleranceMeters() {
@@ -319,7 +506,7 @@ public class Motion {
     }
 
     /**
-     * Get the current position tolerance in inches
+     * Get the current position tolerance in inches.
      * @return tolerance in inches
      */
     static double getMotorToleranceInches() {
@@ -327,7 +514,7 @@ public class Motion {
     }
 
     /**
-     * Set the position tolerance
+     * Set the position tolerance.
      * @param m tolerance in meters
      */
     static void setMotorToleranceMeters(double m) {
@@ -339,7 +526,7 @@ public class Motion {
     }
 
     /**
-     * Set the position tolerance
+     * Set the position tolerance.
      * @param inch tolerance in inches
      */
     static void setMotorToleranceInches(double inch) {
@@ -348,16 +535,29 @@ public class Motion {
     }
 
     /**
-     * Test if motors have reached their target
+     * Test if motors have reached their target.
      * @return true if both drive motors are close to target
      */
     static boolean finished() {
-        if (dcmotorLeft.isBusy()) return false;
-        return !dcmotorRight.isBusy();
+        // if either motor is busy, return false
+        if (dcmotorLeft.isBusy() ||  dcmotorRight.isBusy())
+            return false;
+        else {
+            // robot reached the position!
+
+            // log the position at the instant of success
+            Log.d("Motion.finished()",
+                    String.format("Pose (%.02f, %.02f) inches, heading %.01f degrees",
+                        Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees));
+
+            // return true
+            return true;
+        }
     }
 
     /**
-     * Move the left and right motors a particular distance
+     * Move the left and right motors a particular distance.
+     * Commands the motors to move.
      * @param mLeft distance to move left motor in meters
      * @param mRight distance to move right motor in meters
      */
@@ -371,7 +571,8 @@ public class Motion {
     }
 
     /**
-     * Move the left and right motors a particular distance
+     * Move the left and right motors a particular distance.
+     * Commands the motors to move.
      * @param inLeft distance to move the left motor in inches
      * @param inRight distance to move the right motor in inches
      */
@@ -380,7 +581,8 @@ public class Motion {
     }
 
     /**
-     * Move straight ahead a particular distance
+     * Move straight ahead a particular distance.
+     * Commands the motors to move.
      * @param m distance in meters
      */
     static void moveMeters(double m) {
@@ -388,7 +590,8 @@ public class Motion {
     }
 
     /**
-     * Move straight ahead a particular distance
+     * Move straight ahead a particular distance.
+     * Commands the motors to move.
      * @param in distance in inches
      */
     static void moveInches(double in) {
@@ -397,19 +600,20 @@ public class Motion {
     }
 
     /**
-     * Turn a relative angle
+     * Turn a relative angle in radians.
+     * Commands the motors to move.
      * @param radians angle in radians
      */
     static void turnRadians(double radians) {
         // multiply by the radius in meters to get the circumferential distance
         double dist = radians * distWheel;
         // command the motors
-        // TODO: +- for modern robot; -+ for old
         moveMotorsMeters(-dist, dist);
     }
 
     /**
-     * Turn an angle in degrees
+     * Turn an angle in degrees.
+     * Commands the motors to move.
      * @param degrees angle to turn in degrees
      */
     static void turnDegrees(double degrees) {
@@ -433,7 +637,8 @@ public class Motion {
     }
 
     /**
-     * Point the robot to the position (x, y) in inches
+     * Point the robot to the position (x, y) in inches.
+     * Commands the motors to move.
      * @param x y coordinate in inches
      * @param y y coordinate in inches
      */
@@ -451,18 +656,22 @@ public class Motion {
         turnRadians(radianTurn);
     }
 
+    /**
+     * Compute the distance from the current position to (x,y)
+     * @param x x-position in inches
+     * @param y y-position in inches
+     * @return distance in inches
+     */
     static double distanceToInches(double x, double y) {
         // currently at (xPoseInches, yPoseInches)
         // d = sqrt((x1 -x2)^2 + (y1-y2)^2 )
         return Math.hypot(x-xPoseInches, y-yPoseInches);
     }
-    static void moveForward(double inches) {
-        // the 288 is a magic for a CoreHex motor.
-        // It is not appropriate for an UltraPlanetary
-        double ticksperinch = (288) / (90  * Math.PI  * (inches / 25.4));
-        int ticks = (int)(inches * ticksperinch);
-        dcmotorLeft.setTargetPosition(dcmotorLeft.getCurrentPosition() + ticks);
-        dcmotorRight.setTargetPosition(dcmotorRight.getCurrentPosition() + ticks);
+
+    static void reportPosition(Telemetry telemetry) {
+        telemetry.addData("position",
+                String.format((Locale)null, "(%6.01f %6.01f) inches, heading %6.01f degrees",
+                        xPoseInches, yPoseInches, thetaPoseDegrees));
     }
 
 }

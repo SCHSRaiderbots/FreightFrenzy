@@ -5,6 +5,7 @@ import android.util.Log;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
@@ -117,23 +118,29 @@ class LogDevice {
         // Want details about the motor type...
         // These values scare me a bit: does each motor get its own instance of a motor type?
         // Or do all UltraPlanetary motors share the same motor type?
-        //   here is some data from a REV Robotics Core Hex Motor
+        //   here is some data
+        // +++ REV Robotics Core Hex Motor
         // *** REV RoboticsUltraPlanetary HD Hex Motor
         Log.d("    motor type", motor.getMotorType().getName());
-        // ticks reported as 288.0 (REV says 4 ticks/motorRev times 72)
+        // ticks
+        // +++ 288.0 (REV says 4 ticks/motorRev times 72)
         // *** 560 (so 20 * 28 ticks/rev)
         Log.d("    motor ticks", String.valueOf(motor.getMotorType().getTicksPerRev()));
-        // max RPM 137.0 (documents say 125 RPM)
+        // max RPM
+        // +++ 137.0 (documents say 125 RPM)
         // *** 300 (so 6000 / 20)
         Log.d("    motor rpm", String.valueOf(motor.getMotorType().getMaxRPM()));
-        // achievable ticks/second 558.9599999999
+        // achievable ticks/second
+        // +++ 558.9599999999
         // *** 2380.
         Log.d("    motor achievable ticks/sec", String.valueOf(motor.getMotorType().getAchieveableMaxTicksPerSecond()));
-        // gearing reported as 36.25!
+        // gearing reported as
+        // +++ 36.25!
         // *** 20
         Log.d("    gearing", String.valueOf(motor.getMotorType().getGearing()));
 
-        // (dcMotorEx) tolerance is 5 ticks.
+        // (dcMotorEx) tolerance is
+        // +++ 5 ticks.
         // *** 5
         Log.d(TAG, "    TargetPositionTolerance = " + motor.getTargetPositionTolerance());
 
@@ -146,13 +153,13 @@ class LogDevice {
 
         // dump information about the PIDF coefficients
         // Velocity control
-        //   4.96, 0.496, 0, 49.6
+        // +++  4.96, 0.496, 0, 49.6
         // *** 10, 3, 0, 0, legacy
         dumpPIDF("  PIDF(rue) = ", motor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
         // Position control
         //   The run to position algorithm only makes use of P.
         //   See .setPIDFCoefficients()
-        //   5, 0, 0, 0
+        // +++  5, 0, 0, 0
         // *** 10, 0.05, 0, 0, legacy
         dumpPIDF("  PIDF(r2p) = ", motor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION));
     }
@@ -189,5 +196,13 @@ class LogDevice {
         Log.d(TAG, "  position: " + servo.getPosition());
     }
 
-    // TODO: Gamepad.Type
+    /**
+     * Dump a gamepad
+     * @param name name of the gamepad
+     * @param gamepad the gamepad device
+     */
+    static void dump(String name, Gamepad gamepad) {
+        Log.d(TAG, "gamepad information for " + name);
+        Log.d(TAG, "  type: " + gamepad.type);
+    }
 }
