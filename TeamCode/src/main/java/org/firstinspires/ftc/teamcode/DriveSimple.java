@@ -18,6 +18,7 @@ public class DriveSimple extends OpMode {
     // distance sensor
     DistanceSensor distanceSensorRev2m;
     ArmMotor armMotor;
+    Carousel carousel;
 
     @Override
     public void init() {
@@ -37,6 +38,10 @@ public class DriveSimple extends OpMode {
         // get the end actuator
         armMotor = new ArmMotor();
         armMotor.init(hardwareMap);
+
+        //get the carousel
+        carousel = new Carousel();
+        carousel.init(hardwareMap);
 
         // report the initialization
         telemetry.addData("Drive motors", "initialized");
@@ -86,6 +91,8 @@ public class DriveSimple extends OpMode {
         if (gamepad1.b) {
             armMotor.outtake();
         }
+
+        carousel.spin(gamepad1.right_trigger);
 
         // use game pad 1 button x to reset the pose
         if (gamepad1.x) {

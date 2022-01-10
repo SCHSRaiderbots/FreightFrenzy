@@ -60,7 +60,6 @@ public class Carousel{
     double power = 0.5;
 
 
-    @Override
     public void init(HardwareMap hardwareMap) {
 
 
@@ -74,7 +73,7 @@ public class Carousel{
     }
 
     public void spin(double velocity){
-        carouselMotor.setVelocity(velocity);
+        carouselMotor.setVelocity(velocity * 1000);
     }
 
 }
