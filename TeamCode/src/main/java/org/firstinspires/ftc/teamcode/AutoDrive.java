@@ -22,7 +22,8 @@ public class AutoDrive extends OpMode {
         STATE_DROP_FREIGHT,
         STATE_BACKUP,
         STATE_TURN_TOWARD_WAREHOUSE,
-        STATE_FORWARD_WAREHOUSE,
+        STATE_FORWARD_WAREHOUSE1,
+        STATE_FORWARD_WAREHOUSE2,
 
         STATE_TEST_1,
         STATE_TEST_2,
@@ -39,8 +40,8 @@ public class AutoDrive extends OpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        dcmotorLeft  = hardwareMap.get(DcMotorEx.class, "left_drive");
-        dcmotorRight = hardwareMap.get(DcMotorEx.class, "right_drive");
+        dcmotorLeft  = hardwareMap.get(DcMotorEx.class, "leftMotor");
+        dcmotorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
         Motion.setRobotMotors(dcmotorLeft, dcmotorRight);
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -62,7 +63,10 @@ public class AutoDrive extends OpMode {
         dcmotorRight.setPower(0.4);
 
         currState = AutoDrive.State.STATE_INITIAL;
-        Motion.setRobotDims2020();
+        //Motion.setRobotDims2020();
+        Motion.setRobotDims2021();
+
+
 
     }
 
@@ -96,8 +100,8 @@ public class AutoDrive extends OpMode {
             // we need to start moving
             case STATE_INITIAL:
                 // start moving
-                //Motion.moveInches(10.);
-                Motion.moveInches(20.); //used for testing
+                Motion.moveInches(10.);
+                //Motion.moveInches(20.); //used for testing
                 newState(AutoDrive.State.STATE_FORWARD);
                 telemetry.addData("Finished Initial State","");
                 break;
@@ -109,10 +113,10 @@ public class AutoDrive extends OpMode {
                     // the robot has finished moving.
                     // give it new command
                     //Motion.headTowardInches(-12,-24);
-                    //Motion.headTowardInches(-24,-36); USE THIS!!!
+                    Motion.headTowardInches(-24,-36); //USE THIS!!!
                     //Motion.headTowardInches()
                     //Motion.turnDegrees(-90); test the accuracy
-                    Motion.headTowardInches(0,0);
+                    //Motion.headTowardInches(0,0);
 
                     newState(State.STATE_TURN);
                     telemetry.addData("Finished Forward State","");
@@ -126,13 +130,13 @@ public class AutoDrive extends OpMode {
                 if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
                     // calculate the distance we need to go
 
-                   //double dis = Motion.distanceToInches(-24,-45);
-                    double dis = Motion.distanceToInches(0,0); //testing
+                   double dis = Motion.distanceToInches(-24,-45);
+                    //double dis = Motion.distanceToInches(0,0); //testing
                     // start the next movement
                     Motion.moveInches(dis);
 
                     newState(State.STATE_DROP_FREIGHT);
-                    newState(State.STATE_STOP);
+                    //newState(State.STATE_STOP);
 
                 }
                 break;
@@ -142,8 +146,8 @@ public class AutoDrive extends OpMode {
                 if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
                     // we are at the alliance hub
                     Motion.moveInches(-5.0);
-                    newState(State.STATE_STOP);
-                    // newState(State.STATE_BACKUP);
+                    //newState(State.STATE_STOP);
+                    newState(State.STATE_BACKUP);
                 }
                 break;
 
@@ -152,24 +156,37 @@ public class AutoDrive extends OpMode {
                 if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
                     // head toward the warehouse
                     Motion.headTowardInches(48,-48);
-                    newState(State.STATE_TURN_TOWARD_WAREHOUSE);
                     //newState(State.STATE_STOP);
+                    newState(State.STATE_TURN_TOWARD_WAREHOUSE);
+
                 }
                 break;
 
             case STATE_TURN_TOWARD_WAREHOUSE:
                 // have we finished the turn?
                 if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
-                    double distanceMoveW = Motion.distanceToInches(48,-48);
+                    double distanceMoveW = Motion.distanceToInches(12,-48);
                     // start moving that distance to the warehouse
+                    dcmotorLeft.setPower(0.8);
+                    dcmotorRight.setPower(0.8);
                     Motion.moveInches(distanceMoveW);
-                    newState(State.STATE_FORWARD_WAREHOUSE);
+                    newState(State.STATE_STOP);
+                    //newState(State.STATE_FORWARD_WAREHOUSE1);
                 }
                 break;
 
-            case STATE_FORWARD_WAREHOUSE:
+            case STATE_FORWARD_WAREHOUSE1:
                 if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
+                    double distanceMoveW = Motion.distanceToInches(48,-48);
+                    dcmotorLeft.setPower(0.8);
+                    dcmotorRight.setPower(0.8);
+                    Motion.moveInches(distanceMoveW);
+                    newState(State.STATE_FORWARD_WAREHOUSE2);
 
+                }
+                break;
+            case STATE_FORWARD_WAREHOUSE2:
+                if (!dcmotorLeft.isBusy() && !dcmotorRight.isBusy()) {
                     newState(State.STATE_STOP);
                 }
                 break;

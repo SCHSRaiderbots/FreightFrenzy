@@ -21,6 +21,9 @@ public class AutoSimple extends OpMode {
     /** actuator at the end of the arm */
     ArmMotor armMotor;
 
+    /** arm */
+    Arm arm;
+
     enum State {STATE_INITIAL, STATE_RUNNING, STATE_TURNING, STATE_FINAL}
     State state = State.STATE_INITIAL;
 
@@ -39,6 +42,13 @@ public class AutoSimple extends OpMode {
         armMotor = new ArmMotor();
         armMotor.init(hardwareMap);
         armMotor.outtake();
+
+        // get the arm
+        arm = new Arm();
+        arm.init(hardwareMap);
+        arm.zero();
+        // set the height
+        arm.setHeightInch(10.0);
     }
 
     @Override
@@ -66,7 +76,7 @@ public class AutoSimple extends OpMode {
         // set initial state
         state = State.STATE_INITIAL;
 
-        armMotor.intake();
+        armMotor.outtake();
     }
 
     @Override
@@ -83,8 +93,10 @@ public class AutoSimple extends OpMode {
         switch (state) {
             case STATE_INITIAL:
                 // start moving forward
-                Motion.moveInches(20.0);
+                // Motion.moveInches(20.0);
+                Motion.turnDegrees(1800);
                 state = State.STATE_RUNNING;
+                state = State.STATE_FINAL;
                 break;
 
             case STATE_RUNNING:
