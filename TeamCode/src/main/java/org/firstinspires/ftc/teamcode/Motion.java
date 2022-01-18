@@ -136,14 +136,24 @@ public class Motion {
      */
     static void identifyRobot(HardwareMap hardwareMap) {
 
+        // Use a touch sensor (that need not exist) to identify the robot
+        RevTouchSensor touch;
+
         // if it has a robot2018 touch sensor, then it is a 2018 robot...
-        RevTouchSensor touch = hardwareMap.tryGet(RevTouchSensor.class, "robot2018");
+        touch = hardwareMap.tryGet(RevTouchSensor.class, "robot2018");
         if (touch != null) {
             // found the 2018 robot
             robot = Robot.ROBOT_2018;
             return;
         }
 
+        touch = hardwareMap.tryGet(RevTouchSensor.class, "robot2020");
+        if (touch != null) {
+            // found the 2020 robot
+            robot = Robot.ROBOT_2020;
+        }
+
+        // TODO: I believe this is no longer true
         // the 2020 robot configuration uses left_drive and right_drive.
         DcMotorEx dcMotorEx = hardwareMap.tryGet(DcMotorEx.class, "left_drive");
         if (dcMotorEx != null) {
@@ -151,6 +161,8 @@ public class Motion {
             robot = Robot.ROBOT_2020;
         }
 
+        // we did not find any evidence to contrary, assume robot was set correctly...
+        // currently defaults to 2021 robot...
     }
 
     /**
@@ -167,7 +179,7 @@ public class Motion {
         // initialize the robot
         switch (robot) {
             case ROBOT_MECANUM:
-                // TODO: give up on mecanum
+                // give up on mecanum
                 break;
 
             case ROBOT_2018:
@@ -261,7 +273,7 @@ public class Motion {
         // dump the motors
         LogDevice.dump("dcmotorLeft", dcmotorLeft);
         LogDevice.dump("dcmotorRight", dcmotorRight);
-}
+    }
 
     /**
      * Odometry must know which motors are being used...

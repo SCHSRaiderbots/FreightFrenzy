@@ -13,8 +13,8 @@ public class ArmMotor{ //What does that do tho?
 
     private Servo pickup;
 
-    private final double S_IN = 0.0;
-    private final double S_OUT = 0.5;
+    private final double S_IN = 0.1;
+    private final double S_OUT = 1.0;
 
     //From the C_Wheel.java file for basic idea
     public void init(HardwareMap hardwareMap){
@@ -30,6 +30,10 @@ public class ArmMotor{ //What does that do tho?
     public void outtake() {
         pickup.setPosition(S_OUT);
 
+    }
+
+    public void setPosition(double p) {
+        pickup.setPosition(p);
     }
 }
 
