@@ -18,6 +18,7 @@ public class DriveSimple extends OpMode {
     // distance sensor
     DistanceSensor distanceSensorRev2m;
     ArmMotor armMotor;
+    Arm arm;
     Carousel carousel;
 
     @Override
@@ -39,9 +40,16 @@ public class DriveSimple extends OpMode {
         armMotor = new ArmMotor();
         armMotor.init(hardwareMap);
 
-        //get the carousel
+        // get the arm
+        arm = new Arm();
+        arm.init(hardwareMap);
+        //arm.setLevel(Arm.Level.LEVEL3);
+        arm.zero();
+
+        // get the carousel
         carousel = new Carousel();
         carousel.init(hardwareMap);
+        carousel.spin(0.0);
 
         // report the initialization
         telemetry.addData("Drive motors", "initialized");
@@ -86,13 +94,22 @@ public class DriveSimple extends OpMode {
 
         // use the game pad to operate the intake
         if (gamepad1.a) {
-            armMotor.intake();
+            // armMotor.intake();
         }
         if (gamepad1.b) {
-            armMotor.outtake();
+            // armMotor.outtake();
         }
 
+        armMotor.setPosition(-gamepad1.right_stick_y);
+
+        // TODO: does not work
+        arm.setEncoder(1-gamepad1.left_trigger);
+        telemetry.addData("Arm ", gamepad1.left_trigger);
+
+
         carousel.spin(gamepad1.right_trigger);
+        telemetry.addData("Carousel", carousel.getRelativeVelocity());
+        telemetry.addData("c motor", carousel.carouselMotor.getVelocity());
 
         // use game pad 1 button x to reset the pose
         if (gamepad1.x) {
@@ -101,8 +118,8 @@ public class DriveSimple extends OpMode {
 
         // TODO: use abstract units
         double power = 1000.0;
-        double velLeft = 0.0;
-        double velRight = 0.0;
+        double velLeft;
+        double velRight;
 
         // TODO: arcade drive
         // TODO: quadratic drive
@@ -113,10 +130,10 @@ public class DriveSimple extends OpMode {
                 break;
             case ARCADE:
             default:
-                double turn = 0.3 * gamepad1.left_stick_x * power;
-                double vel = -gamepad1.right_stick_y * power;
-                velLeft = vel - turn;
-                velRight = vel + turn;
+                double turn = 0.5 * gamepad1.left_stick_x * power;
+                double vel = -gamepad1.left_stick_y * power;
+                velLeft = vel + turn;
+                velRight = vel - turn;
                 break;
         }
         Motion.setVelocity(velLeft, velRight);
