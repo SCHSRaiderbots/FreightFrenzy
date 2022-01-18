@@ -153,7 +153,7 @@ public class AutoDrive extends OpMode {
 
             case STATE_FORWARD_WAREHOUSE1:
                 if (Motion.finished()) {
-                    double distanceMoveW = Motion.distanceToInches(48,-52);
+                    double distanceMoveW = Motion.distanceToInches(60,-60);
                     Motion.setPower(0.8);
                     Motion.moveInches(distanceMoveW);
                     newState(State.STATE_FORWARD_WAREHOUSE2);
