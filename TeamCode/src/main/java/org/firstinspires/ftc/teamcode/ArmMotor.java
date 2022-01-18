@@ -11,6 +11,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class ArmMotor{ //What does that do tho?
 
+    private ElapsedTime runtime = new ElapsedTime();
+
     private Servo pickup;
 
     private final double S_IN = 0.1;
@@ -26,14 +28,24 @@ public class ArmMotor{ //What does that do tho?
     }
     public void intake() {
         pickup.setPosition(S_IN);
+        runtime.reset();
     }
     public void outtake() {
         pickup.setPosition(S_OUT);
+        runtime.reset();
 
     }
 
     public void setPosition(double p) {
         pickup.setPosition(p);
+        runtime.reset();
+    }
+
+    public boolean finished() {
+        if (runtime.seconds() > 1){
+            return true;
+        }
+        return false;
     }
 }
 
