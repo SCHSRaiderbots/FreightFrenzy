@@ -108,6 +108,8 @@ public class DriveSimple extends OpMode {
 
 
         carousel.spin(gamepad1.right_trigger);
+        telemetry.addData("Carousel", carousel.getRelativeVelocity());
+        telemetry.addData("c motor", carousel.carouselMotor.getVelocity());
 
         // use game pad 1 button x to reset the pose
         if (gamepad1.x) {

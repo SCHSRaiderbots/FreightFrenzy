@@ -71,8 +71,11 @@ public class Carousel{
         carouselMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         carouselMotor.setVelocity(0);
 
-        double f = 32000.0 / (6000/60);
-        PIDFCoefficients pidfRUE = new PIDFCoefficients(10, 5, 0.0, f, MotorControlAlgorithm.PIDF);
+        double rpm = 6000.0;
+        double rps = rpm / 60;
+        double ticksPerRev = 28;
+        double f = 32000.0 / (ticksPerRev * rps);
+        PIDFCoefficients pidfRUE = new PIDFCoefficients(10, 1, 0.0, f, MotorControlAlgorithm.PIDF);
         PIDFCoefficients pidfR2P = new PIDFCoefficients( 10, 0.0, 0.0, 0.0, MotorControlAlgorithm.PIDF);
         carouselMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRUE);
         carouselMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfR2P);
@@ -83,6 +86,9 @@ public class Carousel{
         // set the power level
         carouselMotor.setPower(power);
 
+        // log the motor settings
+        LogDevice.dump("Carousel", carouselMotor);
+
         // set spin to zero
         spin(0.0);
     }
@@ -91,9 +97,45 @@ public class Carousel{
      * spin the carousel at a relative velocity
      * @param velocity a number between 0 and 1
      */
-    public void spin(double velocity){
+    public void spin(double velocity) {
+        // max spin
+        // using 1.0, a perimeter setting spins off
+        //   set duck tail at the black cap and step on the gas, duck falls off
+        // using 0.8, a perimeter setting spins off
+        //   set at danger, and it will spin out.
+        //   set duck tail at the black cap and works unless the duck rolls over
+        // using 0.7, a perimeter setting will spin off
+        //   a setting on inch in will not spin off
+        //   the duck jumps during the initial acceleration, so a soft start would be better
+        // using 0.6, a perimeter setting will spin off
+        //   a setting one inch in will not spin off
+        // using 0.5, a perimeter setting will spin off before hitting the sweeper plate
+        //   a mid setting will not spin off
+        // using 0.4, it will not spin off if set on the periphery
+        double rpsMax = 0.8;
+
+        // convert max spin to ticks
+        double ticksMax = rpsMax
+                * 28.0 * Motion.HD_HEX_GEAR_CART_5_1 * Motion.HD_HEX_GEAR_CART_4_1
+                * (15.0 * 25.4 / 90.0);
+
         // spin the carousel at a scaled velocity
-        carouselMotor.setVelocity(velocity * 500);
+        carouselMotor.setVelocity(velocity * ticksMax);
+    }
+
+    /**
+     * Get the velocity in Revolutions per second.
+     * @return revolutions per second.
+     */
+    public double getRelativeVelocity() {
+        // this number should be absolute ticks per second
+        double ticksPerSecond = carouselMotor.getVelocity();
+        // we have an ultra planetary with 4:1 and 5:1 cartridges
+        double rps = ticksPerSecond / (28.0 * Motion.HD_HEX_GEAR_CART_4_1 * Motion.HD_HEX_GEAR_CART_5_1);
+
+        // the 15-inch carousel will spin slower than the motor rpm.
+        // drive wheel is 90 mm
+        return rps * (90.0 / (15.0 * 25.4));
     }
 
 }

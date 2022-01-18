@@ -26,16 +26,25 @@ public class Arm {
         // set the direction so positive numbers are up
         armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        double f = 32000.0 / (28.0 * 6000.0 / 60.0);
+        double rpm = 6000.0;
+        double rps = rpm / 60.0;
+        double ticksPerRev = 28.0;
+        double f = 32000.0 / (ticksPerRev * rps);
 
-        PIDFCoefficients pidfRUE = new PIDFCoefficients(10.0, 1.0, 0.0, f, MotorControlAlgorithm.PIDF);
-        PIDFCoefficients pidfR2P = new PIDFCoefficients(10.0, 0.0, 0.0, 0.0, MotorControlAlgorithm.PIDF);
+        PIDFCoefficients pidfRUE = new PIDFCoefficients(10.0, 0.1, 0.0, f, MotorControlAlgorithm.PIDF);
+        PIDFCoefficients pidfR2P = new PIDFCoefficients(20.0, 0.0, 0.0, 0.0, MotorControlAlgorithm.PIDF);
+
+        armMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRUE);
+        armMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfR2P);
 
         // initialize the arm Motor
         int positionStart = armMotor.getCurrentPosition();
         armMotor.setTargetPosition(positionStart);
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         armMotor.setPower(1.0);
+
+        // log the motor settings
+        LogDevice.dump("arm motor", armMotor);
     }
 
     public void zero() {
