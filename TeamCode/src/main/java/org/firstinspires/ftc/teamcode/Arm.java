@@ -10,6 +10,11 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 public class Arm {
     private DcMotorEx armMotor;
 
+    final double R = 14.0;
+    final double X1 = 1.0;
+    final double Y1 = 8.0;
+    final int ticksZero = 60;
+
     /**
      * Logical levels for the arm.
      */
@@ -80,10 +85,21 @@ public class Arm {
         armMotor.setTargetPosition((int)(400 - rel * 400));
     }
 
-    public void setHeightInch(double inches) {
-        int pos = 37;
+    public void setTheta(double theta) {
+        double ticksPerMotorRev = 288.0;
+        double smallGear = 15.0;
+        double bigGear = 125.0;
+        double ratio = bigGear/smallGear;
+        double revsSmallGear = (theta/(2*Math.PI))*(ratio);
+        double ticks = ticksPerMotorRev * revsSmallGear;
+        armMotor.setTargetPosition(ticksZero + (int)ticks);
+    }
 
-        armMotor.setTargetPosition(pos);
+    public void setHeightInch(double h) {
+        // TODO: fix this code
+        double theta = Math.asin((h-X1)/R);
+
+        setTheta(theta);
     }
 
     /**
