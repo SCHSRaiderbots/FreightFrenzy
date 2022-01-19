@@ -13,6 +13,9 @@ public class AutoDrive extends OpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
 
+    Arm.Level level = Arm.Level.LEVEL1;
+    Arm arm;
+    ArmMotor armMotor;
     private enum State {
         STATE_INITIAL,
         STATE_FORWARD,
@@ -41,8 +44,13 @@ public class AutoDrive extends OpMode {
 
         Motion.init(hardwareMap);
         Motion.setPower(0.5);
-
+        arm = new Arm();
+        arm.init(hardwareMap);
         currState = AutoDrive.State.STATE_INITIAL;
+
+        armMotor=new ArmMotor();
+        armMotor.init(hardwareMap);
+
 
 
     }
@@ -52,6 +60,7 @@ public class AutoDrive extends OpMode {
         Motion.updateRobotPose();
 
         // detect where the duck is
+
     }
 
     /**
@@ -64,6 +73,19 @@ public class AutoDrive extends OpMode {
         //Motion.setPoseInches(-36.0,-63.0, 90); original points
         Motion.setPoseInches(-36.0,-61.5, 90);
 
+        // figure out the level
+        switch (GameConfig.barCode) {
+            case LEFT:
+                level = Arm.Level.LEVEL1;
+                break;
+            case MIDDLE:
+                level = Arm.Level.LEVEL2;
+                break;
+            default:
+            case RIGHT:
+                level = Arm.Level.LEVEL3;
+                break;
+        }
     }
 
     @Override
@@ -78,7 +100,7 @@ public class AutoDrive extends OpMode {
             case STATE_INITIAL:
                 // start moving
                 Motion.moveInches(10.);
-
+                arm.setLevel(level);
                 //Motion.moveInches(20.); //used for testing
                 newState(AutoDrive.State.STATE_FORWARD);
                 telemetry.addData("Finished Initial State","");
@@ -87,7 +109,6 @@ public class AutoDrive extends OpMode {
             case STATE_FORWARD:
                 // Loop while the motor is moving to the target
                 if (Motion.finished()) {
-
                     // the robot has finished moving.
                     // give it new command
                     //Motion.headTowardInches(-12,-24);
@@ -106,12 +127,24 @@ public class AutoDrive extends OpMode {
 
                 // have we completed the turn?
                 if (Motion.finished()) {
-                    // calculate the distance we need to go
+                    // we are headed toward the hub
+                    // distance to center of hub
+                    double distanceToMove = Motion.distanceToInches(-24,-36)
+                            // distance to the center of the hub
+                           // double dis = Motion.distanceToInches(-24,-36)
+                            // need to make two corrections
+                            // subtract the radius of the level
+                            - level.radius
+                            // subtract the extension of the arm
+                            - arm.extension(level);
 
-                    double dis = Motion.distanceToInches(-24,-45);
+
+                    // calculate the distance we need to go
+                    //arm.setLevel(level);
+                    //double dis = Motion.distanceToInches(-24,-45);
                     //double dis = Motion.distanceToInches(0,0); //testing
                     // start the next movement
-                    Motion.moveInches(dis);
+                    //Motion.moveInches(dis);
 
                     newState(State.STATE_DROP_FREIGHT);
                     //newState(State.STATE_STOP);
@@ -123,6 +156,7 @@ public class AutoDrive extends OpMode {
                 // have we finished moving?
                 if (Motion.finished()) {
                     // we are at the alliance hub
+                    armMotor.outtake();
                     Motion.moveInches(-5.0);
                     //newState(State.STATE_STOP);
                     newState(State.STATE_BACKUP);
@@ -153,7 +187,7 @@ public class AutoDrive extends OpMode {
 
             case STATE_FORWARD_WAREHOUSE1:
                 if (Motion.finished()) {
-                    double distanceMoveW = Motion.distanceToInches(48,-52);
+                    double distanceMoveW = Motion.distanceToInches(60,-60);
                     Motion.setPower(0.8);
                     Motion.moveInches(distanceMoveW);
                     newState(State.STATE_FORWARD_WAREHOUSE2);

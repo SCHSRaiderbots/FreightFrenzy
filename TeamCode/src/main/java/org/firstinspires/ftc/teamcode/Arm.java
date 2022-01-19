@@ -13,7 +13,25 @@ public class Arm {
     /**
      * Logical levels for the arm.
      */
-    enum Level {GROUND, LEVEL1, LEVEL2, LEVEL3, RETRACT}
+    enum Level {
+        // TODO: check values
+        GROUND(0.0,0.0), LEVEL1(9.0,3.0), LEVEL2(7.5,8.5), LEVEL3(6,14.75), RETRACT(0.0,0.0);
+        double radius = 5.0;
+        double height=0.0;
+        Level(double r,double h) {
+            this.radius = r;
+            this.height=h;
+        }
+    }
+
+    /**
+     * Correct for the extension of the arm
+     * @return
+     */
+    double extension(Level level) {
+        // TODO figure out the right values according to level
+        return 3.0;
+    }
 
     /**
      * Initialize the arm
@@ -78,28 +96,7 @@ public class Arm {
     }
 
     public void setLevel(Level level) {
-        switch (level) {
-            case GROUND:
-                // setHeightInch(0.0);
-                setEncoder(1.0);
-                break;
-            case LEVEL1:
-                // setHeightInch(3.0);
-                setEncoder(.85);
-                break;
-            case LEVEL2:
-                // setHeightInch(8.0);
-                setEncoder(.77);
-                break;
-            case LEVEL3:
-                // setHeightInch(12.0);
-                setEncoder(.61);
-                break;
-            case RETRACT:
-                // setHeightInch(12.0);
-                setEncoder(0.0);
-                break;
-        }
+       setHeightInch(level.height);
     }
 
 }

@@ -236,6 +236,22 @@ public class Motion {
                 dcmotorRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
                 setRobotDims2021();
+
+
+                rpm = 6000.0;
+
+                revsPerSecond = rpm / 60.0;
+                ticksPerRev = 56.0;
+                f = 32000.0 / (ticksPerRev * revsPerSecond);
+                pidfRUE = new PIDFCoefficients(10, 1, 0, f, MotorControlAlgorithm.PIDF);
+                pidfR2P = new PIDFCoefficients(10, 0, 0, 0, MotorControlAlgorithm.PIDF);
+                setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRUE);
+                setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfR2P);
+
+
+
+                setMotorToleranceInches(0.3);
+
                 break;
         }
 
