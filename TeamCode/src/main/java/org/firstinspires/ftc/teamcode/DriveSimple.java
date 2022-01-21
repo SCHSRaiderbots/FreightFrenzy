@@ -103,9 +103,18 @@ public class DriveSimple extends OpMode {
         armMotor.setPosition(-gamepad1.right_stick_y);
 
         // TODO: does not work
-        arm.setEncoder(1-gamepad1.left_trigger);
-        telemetry.addData("Arm ", gamepad1.left_trigger);
+        if (false) {
+            arm.setEncoder(1-gamepad1.left_trigger);
+            telemetry.addData("Arm ", gamepad1.left_trigger);
+        }
+        else {
+            if (gamepad1.dpad_down) arm.setLevel(Arm.Level.GROUND);
+            if (gamepad1.dpad_left) arm.setLevel(Arm.Level.LEVEL1);
+            if (gamepad1.dpad_up) arm.setLevel(Arm.Level.LEVEL2);
+            if (gamepad1.dpad_right) arm.setLevel(Arm.Level.LEVEL3);
 
+            telemetry.addData("Arm", "Arm height %.01f inches, %d ticks", arm.getHeightInch(), arm.armMotor.getCurrentPosition());
+        }
 
         carousel.spin(gamepad1.right_trigger);
         telemetry.addData("Carousel", carousel.getRelativeVelocity());
@@ -117,9 +126,12 @@ public class DriveSimple extends OpMode {
         }
 
         // TODO: use abstract units
-        double power = 1000.0;
+        // TODO: drive by power or drive by velocity choice
+        double power = 2000.0;
         double velLeft;
         double velRight;
+        double turn;
+        double vel;
 
         // TODO: arcade drive
         // TODO: quadratic drive
@@ -128,10 +140,18 @@ public class DriveSimple extends OpMode {
                 velLeft = -gamepad1.left_stick_y * power;
                 velRight = -gamepad1.right_stick_y * power;
                 break;
+
+            case ARCADE_ONE_STICK:
+                turn = 0.5 * gamepad1.left_stick_x * power;
+                vel = -gamepad1.left_stick_y * power;
+                velLeft = vel + turn;
+                velRight = vel - turn;
+                break;
+
             case ARCADE:
             default:
-                double turn = 0.5 * gamepad1.left_stick_x * power;
-                double vel = -gamepad1.left_stick_y * power;
+                turn = gamepad1.left_stick_x * power;
+                vel = -gamepad1.right_stick_y * power;
                 velLeft = vel + turn;
                 velRight = vel - turn;
                 break;

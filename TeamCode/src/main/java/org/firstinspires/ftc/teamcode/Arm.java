@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -8,12 +10,25 @@ import com.qualcomm.robotcore.hardware.MotorControlAlgorithm;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 public class Arm {
-    private DcMotorEx armMotor;
+    DcMotorEx armMotor;
 
-    final double R = 14.0;
+    /** radius of the arm */
+    final double R = 17.0;
+    /** x position of the arm's axle */
     final double X1 = 1.0;
+    /** y position (really z position) of the arm's axle */
     final double Y1 = 8.0;
-    final int ticksZero = 60;
+
+    final int ticksZero = -60;
+
+    /** Core Hex motor has 288 ticks per revolution */
+    final double ticksPerMotorRev = 288.0;
+    /** number of teeth on the driver gear */
+    final double smallGear = 15.0;
+    /** number of teeth on thw driven gear */
+    final double bigGear = 125.0;
+    /** gear down ratio */
+    final double ratio = bigGear/smallGear;
 
     /**
      * Logical levels for the arm.
@@ -82,24 +97,42 @@ public class Arm {
     }
 
     public void setEncoder(double rel) {
-        armMotor.setTargetPosition((int)(400 - rel * 400));
+        armMotor.setTargetPosition((int)(1200 - rel * 1200));
     }
 
     public void setTheta(double theta) {
-        double ticksPerMotorRev = 288.0;
-        double smallGear = 15.0;
-        double bigGear = 125.0;
-        double ratio = bigGear/smallGear;
+        /** number of revolutions the small gear must make to set angle theta */
         double revsSmallGear = (theta/(2*Math.PI))*(ratio);
         double ticks = ticksPerMotorRev * revsSmallGear;
+
+        Log.d("arm ticks", "ticks are " + ticks);
         armMotor.setTargetPosition(ticksZero + (int)ticks);
     }
 
+    public double getTheta() {
+        // get the ticks relative to horizontal
+        int ticks = armMotor.getCurrentPosition() - ticksZero;
+        // get revs of motor
+        double revsSmallGear = ticks / ticksPerMotorRev;
+        // convert to revs of large gear
+        double revsLargeGear = revsSmallGear / ratio;
+
+        return revsLargeGear / (2.0 * Math.PI);
+    }
+
     public void setHeightInch(double h) {
-        // TODO: fix this code
         double theta = Math.asin((h-X1)/R);
 
+        Log.d("arm theta", "angle is "+ theta);
         setTheta(theta);
+    }
+
+    public double getHeightInch() {
+        double theta = getTheta();
+
+        double h = Y1 + R * Math.sin(theta);
+
+        return h;
     }
 
     /**
@@ -112,7 +145,8 @@ public class Arm {
     }
 
     public void setLevel(Level level) {
-       setHeightInch(level.height);
+        Log.d("arm", "level is "+ level.toString());
+        setHeightInch(level.height);
     }
 
 }

@@ -127,7 +127,7 @@ public class Motion {
     static private int cEncoderRight;
 
     // choose a drive mode
-    enum DriveMode {TANK, ARCADE}
+    enum DriveMode {TANK, ARCADE, ARCADE_ONE_STICK}
     static DriveMode driveMode = DriveMode.ARCADE;
 
     /**
@@ -429,8 +429,12 @@ public class Motion {
 
         // set the wheel half separation
         // measured wheel separation times a fudge factor
+        // the wheel separation shrunk to 8.25 inches
         // TODO: fudge is significant; also some drift to the right
-        distWheel = (5.0/4.316) * (0.343) / 2;
+        // TODO: significant disparity in turn left versus right. Wheels must be slipping.
+        // distWheel = (5.0/3.45) * (8.25 * 0.0254) / 2;
+        // put vise over wheels
+        distWheel = (5.0 / 4.6) * (8.25 * 0.0254) / 2.0;
 
         // ticks per wheel revolution
         // The motor has a 20-tooth sprocket, and the wheel has a 15-tooth sprocket.

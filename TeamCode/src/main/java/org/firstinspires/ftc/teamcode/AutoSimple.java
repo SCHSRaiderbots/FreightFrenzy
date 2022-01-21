@@ -24,7 +24,7 @@ public class AutoSimple extends OpMode {
     /** arm */
     Arm arm;
 
-    enum State {STATE_INITIAL, STATE_RUNNING, STATE_TURNING, STATE_FINAL}
+    enum State {STATE_INITIAL, STATE_REVERSE, STATE_RUNNING, STATE_TURNING, STATE_FINAL}
     State state = State.STATE_INITIAL;
 
     @Override
@@ -41,7 +41,8 @@ public class AutoSimple extends OpMode {
         // get the actuator at the end of the arm
         armMotor = new ArmMotor();
         armMotor.init(hardwareMap);
-        armMotor.outtake();
+        // we should be holding something now
+        armMotor.intake();
 
         // get the arm
         arm = new Arm();
@@ -70,6 +71,9 @@ public class AutoSimple extends OpMode {
         // keep updating the robot pose
         Motion.updateRobotPose();
 
+        // TODO: try max power...
+        Motion.setPower(1.0);
+
         // remember start time
         timeStart = time;
 
@@ -96,7 +100,14 @@ public class AutoSimple extends OpMode {
                 // Motion.moveInches(20.0);
                 Motion.turnDegrees(1800);
                 state = State.STATE_RUNNING;
-                state = State.STATE_FINAL;
+                state = State.STATE_REVERSE;
+                break;
+
+            case STATE_REVERSE:
+                if (gamepad1.a) {
+                    Motion.turnDegrees(-1800);
+                    state = State.STATE_FINAL;
+                }
                 break;
 
             case STATE_RUNNING:
