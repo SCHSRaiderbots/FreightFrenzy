@@ -130,8 +130,8 @@ public class DriveSimple extends OpMode {
                 break;
             case ARCADE:
             default:
-                double turn = 0.5 * gamepad1.left_stick_x * power;
-                double vel = -gamepad1.left_stick_y * power;
+                double turn = 0.5 * gamepad1.right_stick_x * power;
+                double vel = -gamepad1.right_stick_y * power;
                 velLeft = vel + turn;
                 velRight = vel - turn;
                 break;

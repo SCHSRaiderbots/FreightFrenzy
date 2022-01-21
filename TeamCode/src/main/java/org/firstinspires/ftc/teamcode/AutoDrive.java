@@ -46,6 +46,7 @@ public class AutoDrive extends OpMode {
         Motion.setPower(0.5);
         arm = new Arm();
         arm.init(hardwareMap);
+        arm.setLevel(Arm.Level.RETRACT);
         currState = AutoDrive.State.STATE_INITIAL;
 
         armMotor=new ArmMotor();
@@ -81,11 +82,15 @@ public class AutoDrive extends OpMode {
             case MIDDLE:
                 level = Arm.Level.LEVEL2;
                 break;
-            default:
+           default:
             case RIGHT:
                 level = Arm.Level.LEVEL3;
                 break;
         }
+
+
+
+
     }
 
     @Override
