@@ -79,6 +79,7 @@ public class Arm {
 
         // set the direction so positive numbers are up
         armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        armMotor.setTargetPositionTolerance(25);
 
         double rpm = 6000.0;
         double rps = rpm / 60.0;
@@ -126,7 +127,7 @@ public class Arm {
         double ticks = ticksPerMotorRev * revsSmallGear;
 
         Log.d("arm ticks", "ticks are " + ticks);
-        armMotor.setTargetPosition((int)(ticksZero + ticks));
+        armMotor.setTargetPosition((int)(ticksZero - ticks));
     }
 
     /**
