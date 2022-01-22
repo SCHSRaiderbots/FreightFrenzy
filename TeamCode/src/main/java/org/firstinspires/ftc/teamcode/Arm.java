@@ -19,7 +19,6 @@ public class Arm {
     /** y position (really z position) of the arm's axle */
     final double Y1 = 8.0;
 
-    final int ticksZero = -200;
 
     /** Core Hex motor has 288 ticks per revolution */
     final double ticksPerMotorRev = 288.0;
@@ -29,6 +28,8 @@ public class Arm {
     final double bigGear = 125.0;
     /** gear down ratio */
     final double ratio = bigGear/smallGear;
+    final double ticksZero = Math.asin(-Y1/R)*((ticksPerMotorRev*ratio)/(2.0*Math.PI));
+
     GameConfig gameConfig;
 
 
@@ -125,12 +126,16 @@ public class Arm {
         double ticks = ticksPerMotorRev * revsSmallGear;
 
         Log.d("arm ticks", "ticks are " + ticks);
-        armMotor.setTargetPosition(ticksZero + (int)ticks);
+        armMotor.setTargetPosition((int)(ticksZero + ticks));
     }
 
+    /**
+     * Return arm angle
+     * @return returns angle in radians
+     */
     public double getTheta() {
         // get the ticks relative to horizontal
-        int ticks = armMotor.getCurrentPosition() - ticksZero;
+        double ticks = armMotor.getCurrentPosition() - ticksZero;
         // get revs of motor
         double revsSmallGear = ticks / ticksPerMotorRev;
         // convert to revs of large gear
@@ -169,8 +174,11 @@ public class Arm {
         if (level == Level.RETRACT) {
             setTheta(135.0 * (Math.PI / 180.0));
         }
-        else {
+        else if (level == Level.GROUND) {
             setHeightInch(level.height);
+        }
+        else {
+            setHeightInch(level.height+1);
         }
     }
 
