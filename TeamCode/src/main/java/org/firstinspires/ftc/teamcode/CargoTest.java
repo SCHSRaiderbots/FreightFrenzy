@@ -28,7 +28,7 @@ public class CargoTest extends OpMode {
     @Override
     public void loop() {
         // have the joystick control the servo
-        double pos = 1.0 - gamepad1.right_trigger;
+        double pos = gamepad1.right_trigger;
         servo.setPosition(pos);
         telemetry.addData("servo", pos);
     }

@@ -158,4 +158,14 @@
 
     <!-- ======================================================================================= -->
 
+    <!-- ELP-USBFHD01M-l36: 0V2710 webcam with 3.6 mm lens -->
+    <Camera vid="0x32e4" pid="0x9230">
+        <Calibration
+            size="640 480"
+            focalLength="637.3595f, 637.3595f"
+            principalPoint="306.472853786f, 192.43237789f"
+            distortionCoefficients="-0.492111, 0.312884, 0, 0, -0.111681, 0, 0, 0"
+            />
+    </Camera>
+
 </Calibrations>
