@@ -81,6 +81,8 @@ public class DetectionTest extends OpMode {
         // we are in init...
 
         vision.reportDetections(telemetry);
+        //add code depending on what the tfod object sees
+
     }
 
     @Override

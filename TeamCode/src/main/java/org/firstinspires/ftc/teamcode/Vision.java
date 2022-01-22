@@ -117,7 +117,7 @@ public class Vision {
         parameters.cameraName = webcamName;
         // Turn off Extended tracking.  Set this true if you want Vuforia to track beyond the target.
         // TODO: what does this mean?
-        parameters.useExtendedTracking = false;
+        parameters.useExtendedTracking = false; //stops vision once the target objects are not in view
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
@@ -137,7 +137,7 @@ public class Vision {
         tfodParameters.inputSize = 320;
 
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
-        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABELS);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABELS); //what and why is it needed
     }
 
     void reportDetections(Telemetry telemetry) {
@@ -159,6 +159,10 @@ public class Vision {
 
                 // step through the list of recognitions and display boundary info.
                 for (Recognition recognition : updatedRecognitions) {
+                    int width = recognition.getImageWidth();
+                    int height = recognition.getImageHeight();
+                    telemetry.addData("image size", "width %d height %d",
+                            width,height);
                     // TODO: filter the recognitions
                     // is it a reasonable object (e.g., just interested in ducks)
                     // is it a reasonable size (sometimes recognitions are huge)
@@ -170,7 +174,23 @@ public class Vision {
                                     recognition.getLeft(), recognition.getTop(),
                                     recognition.getRight(), recognition.getBottom(),
                                     recognition.getConfidence()));
-                }
+
+                    if (recognition.getLabel()=="Duck"){
+                        float center= (recognition.getLeft()+recognition.getRight())/2;
+                        float delta=width/6;
+                        float d1=(width/2)-delta;
+                        float d2=(width/2)+delta;
+                        if (center<d1){
+                            GameConfig.barCode=GameConfig.barCode.LEFT;
+                        }else if (center<d2){
+                            GameConfig.barCode=GameConfig.barCode.MIDDLE;
+                        }else{
+                            GameConfig.barCode=GameConfig.barCode.RIGHT;
+                        }
+                    }
+
+                    telemetry.addData("barCode:",GameConfig.barCode);
+                } // getLeft() etc gets the pixel coorindates for an image in tenserflow
             }
         }
 
