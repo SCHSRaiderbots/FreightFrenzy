@@ -189,6 +189,7 @@ public class Vision {
                         }
                     }
 
+
                     telemetry.addData("barCode:",GameConfig.barCode);
                 } // getLeft() etc gets the pixel coorindates for an image in tenserflow
             }

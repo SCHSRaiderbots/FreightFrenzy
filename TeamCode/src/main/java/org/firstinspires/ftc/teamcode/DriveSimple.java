@@ -93,11 +93,11 @@ public class DriveSimple extends OpMode {
         Motion.reportPosition(telemetry);
 
         // use the game pad to operate the intake
-        if (gamepad1.a) {
-            // armMotor.intake();
+        if (gamepad2.a) {
+            armMotor.intake();
         }
-        if (gamepad1.b) {
-            // armMotor.outtake();
+        if (gamepad2.b) {
+            armMotor.outtake();
         }
 
         armMotor.setPosition(-gamepad1.right_stick_y);
@@ -116,7 +116,7 @@ public class DriveSimple extends OpMode {
             telemetry.addData("Arm", "Arm height %.01f inches, %d ticks", arm.getHeightInch(), arm.armMotor.getCurrentPosition());
         }
 
-        carousel.spin(gamepad1.right_trigger);
+        carousel.spin(gamepad2.right_trigger);
         telemetry.addData("Carousel", carousel.getRelativeVelocity());
         telemetry.addData("c motor", carousel.carouselMotor.getVelocity());
 

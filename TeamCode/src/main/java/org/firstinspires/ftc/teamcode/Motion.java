@@ -434,7 +434,7 @@ public class Motion {
         // TODO: significant disparity in turn left versus right. Wheels must be slipping.
         // distWheel = (5.0/3.45) * (8.25 * 0.0254) / 2;
         // put vise over wheels
-        distWheel = (5.0 / 4.6) * (8.25 * 0.0254) / 2.0;
+        distWheel = (5.0 / 3.3) * (8.25 * 0.0254) / 2.0;
 
         // ticks per wheel revolution
         // The motor has a 20-tooth sprocket, and the wheel has a 15-tooth sprocket.

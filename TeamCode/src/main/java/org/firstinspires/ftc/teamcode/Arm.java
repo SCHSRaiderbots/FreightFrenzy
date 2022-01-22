@@ -13,13 +13,13 @@ public class Arm {
     DcMotorEx armMotor;
 
     /** radius of the arm */
-    final double R = 17.0;
+    final double R = 16.0;
     /** x position of the arm's axle */
     final double X1 = 1.0;
     /** y position (really z position) of the arm's axle */
     final double Y1 = 8.0;
 
-    final int ticksZero = -60;
+    final int ticksZero = -200;
 
     /** Core Hex motor has 288 ticks per revolution */
     final double ticksPerMotorRev = 288.0;
@@ -29,15 +29,21 @@ public class Arm {
     final double bigGear = 125.0;
     /** gear down ratio */
     final double ratio = bigGear/smallGear;
+    GameConfig gameConfig;
+
 
     /**
      * Logical levels for the arm.
      */
     enum Level {
         // TODO: check values
-        GROUND(0.0,0.0), LEVEL1(9.0,3.0), LEVEL2(7.5,8.5), LEVEL3(6,14.75), RETRACT(0.0,0.0);
-        double radius = 5.0;
-        double height=0.0;
+        GROUND(0.0,0.0),
+        LEVEL1(9.0,3.0),
+        LEVEL2(7.5,8.5),
+        LEVEL3(6,14.75),
+        RETRACT(0.0,16.0);
+        double radius;
+        double height;
         Level(double r,double h) {
             this.radius = r;
             this.height=h;
@@ -48,10 +54,19 @@ public class Arm {
      * Correct for the extension of the arm
      * @return
      */
-    double extension(Level level) {
+    /*void extension(Level level) {
+        double armHeight;
         // TODO figure out the right values according to level
-        return 3.0;
-    }
+        if (gameConfig.barCode== GameConfig.BarCode.LEFT){
+            setHeightInch(3.0);
+        }else if(gameConfig.barCode== GameConfig.BarCode.RIGHT){
+            setHeightInch(14.75);
+        }
+        else {
+            setHeightInch(8.5);
+        }
+
+    }*/
 
     /**
      * Initialize the arm
@@ -100,6 +115,10 @@ public class Arm {
         armMotor.setTargetPosition((int)(1200 - rel * 1200));
     }
 
+    /**
+     * Set the angle of the arm
+     * @param theta angle in radians
+     */
     public void setTheta(double theta) {
         /** number of revolutions the small gear must make to set angle theta */
         double revsSmallGear = (theta/(2*Math.PI))*(ratio);
@@ -125,8 +144,8 @@ public class Arm {
 
         Log.d("arm theta", "angle is "+ theta);
         setTheta(theta);
-    }
 
+    }
     public double getHeightInch() {
         double theta = getTheta();
 
@@ -146,7 +165,13 @@ public class Arm {
 
     public void setLevel(Level level) {
         Log.d("arm", "level is "+ level.toString());
-        setHeightInch(level.height);
+
+        if (level == Level.RETRACT) {
+            setTheta(135.0 * (Math.PI / 180.0));
+        }
+        else {
+            setHeightInch(level.height);
+        }
     }
 
 }
