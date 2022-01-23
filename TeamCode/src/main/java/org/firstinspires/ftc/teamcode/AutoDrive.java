@@ -45,16 +45,17 @@ public class AutoDrive extends OpMode {
         // step (using the FTC Robot Controller app on the phone).
 
         Motion.init(hardwareMap);
-        Motion.setPower(0.5);
+        Motion.setPower(0.4);
         arm = new Arm();
         arm.init(hardwareMap);
         arm.zero();
+        armMotor=new ArmMotor();
+        armMotor.init(hardwareMap);
         arm.setLevel(Arm.Level.RETRACT);
         currState = AutoDrive.State.STATE_INITIAL;
 
 
-        armMotor=new ArmMotor();
-        armMotor.init(hardwareMap);
+
         vision = new Vision();
         vision.initVuforia(hardwareMap);
         vision.initTfod(hardwareMap);
@@ -112,6 +113,7 @@ public class AutoDrive extends OpMode {
             case STATE_INITIAL:
                 // start moving
                 Motion.moveInches(10.);
+                armMotor.hold();
                 arm.setLevel(level);
                 //Motion.moveInches(20.); //used for testing
                 newState(AutoDrive.State.STATE_FORWARD);
@@ -179,8 +181,11 @@ public class AutoDrive extends OpMode {
                     Motion.moveInches(-5.0);
                     arm.setLevel(Arm.Level.RETRACT);
                     //newState(State.STATE_STOP);
-                    newState(State.STATE_BACKUP);
+                    if (arm.finished()){
+                        newState(State.STATE_BACKUP);
+                    }
                 }
+                break;
 
             case STATE_BACKUP:
                 // have we finished backing up?

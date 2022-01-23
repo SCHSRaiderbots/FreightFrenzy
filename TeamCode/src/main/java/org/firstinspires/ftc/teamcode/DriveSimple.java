@@ -81,7 +81,7 @@ public class DriveSimple extends OpMode {
         Motion.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // set the power level
-        Motion.setPower(0.8);
+        Motion.setPower(0.5);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class DriveSimple extends OpMode {
             armMotor.outtake();
         }
 
-        armMotor.setPosition(-gamepad1.right_stick_y);
+        // armMotor.setPosition(-gamepad1.right_stick_y);
 
         // TODO: does not work
         if (false) {
@@ -108,10 +108,10 @@ public class DriveSimple extends OpMode {
             telemetry.addData("Arm ", gamepad1.left_trigger);
         }
         else {
-            if (gamepad1.dpad_down) arm.setLevel(Arm.Level.GROUND);
-            if (gamepad1.dpad_left) arm.setLevel(Arm.Level.LEVEL1);
-            if (gamepad1.dpad_up) arm.setLevel(Arm.Level.LEVEL2);
-            if (gamepad1.dpad_right) arm.setLevel(Arm.Level.LEVEL3);
+            if (gamepad2.dpad_down) arm.setLevel(Arm.Level.GROUND);
+            if (gamepad2.dpad_left) arm.setLevel(Arm.Level.LEVEL1);
+            if (gamepad2.dpad_up) arm.setLevel(Arm.Level.LEVEL2);
+            if (gamepad2.dpad_right) arm.setLevel(Arm.Level.LEVEL3);
 
             telemetry.addData("Arm", "Arm height %.01f inches, %d ticks", arm.getHeightInch(), arm.armMotor.getCurrentPosition());
         }
