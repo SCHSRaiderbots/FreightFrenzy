@@ -175,23 +175,26 @@ public class Vision {
                                     recognition.getRight(), recognition.getBottom(),
                                     recognition.getConfidence()));
 
-                    if (recognition.getLabel()=="Duck"){
+                    // this test ("==") relies on the strings being interned!
+                    //   recognition.getLabel() == "Duck"
+                    // this test will work as long as getLabel() does not return null
+                    //   recognition.getLabel().equals("Duck")
+                    if (recognition.getLabel().equals("Duck")) {
                         float center= (recognition.getLeft()+recognition.getRight())/2;
-                        float delta=width/6;
-                        float d1=(width/2)-delta;
-                        float d2=(width/2)+delta;
+                        float delta=width/6.0f;
+                        float d1=(width/2.0f)-delta;
+                        float d2=(width/2.0f)+delta;
                         if (center<d1){
-                            GameConfig.barCode=GameConfig.barCode.LEFT;
+                            GameConfig.barCode=GameConfig.BarCode.LEFT;
                         }else if (center<d2){
-                            GameConfig.barCode=GameConfig.barCode.MIDDLE;
+                            GameConfig.barCode= GameConfig.BarCode.MIDDLE;
                         }else{
-                            GameConfig.barCode=GameConfig.barCode.RIGHT;
+                            GameConfig.barCode= GameConfig.BarCode.RIGHT;
                         }
                     }
 
-
                     telemetry.addData("barCode:",GameConfig.barCode);
-                } // getLeft() etc gets the pixel coorindates for an image in tenserflow
+                } // getLeft() etc gets the pixel coordinates for an image in tensorflow
             }
         }
 
