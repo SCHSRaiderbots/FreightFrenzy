@@ -21,6 +21,9 @@ public class DriveSimple extends OpMode {
     Arm arm;
     Carousel carousel;
 
+    // for 2020 robot
+    SCHSShooter shooter = null;
+
     @Override
     public void init() {
         // TODO: https://docs.ftclib.org/ftclib/
@@ -36,20 +39,34 @@ public class DriveSimple extends OpMode {
         // try to get the Rev 2m distance sensor
         distanceSensorRev2m = hardwareMap.tryGet(DistanceSensor.class, "rev2meter");
 
-        // get the end actuator
-        armMotor = new ArmMotor();
-        armMotor.init(hardwareMap);
+        switch (Motion.robot) {
+            case ROBOT_2020:
+                // get the shooter
+                shooter = new SCHSShooter();
+                // initialize the shooter
+                shooter.initialize(hardwareMap);
+                break;
 
-        // get the arm
-        arm = new Arm();
-        arm.init(hardwareMap);
-        //arm.setLevel(Arm.Level.LEVEL3);
-        arm.zero();
+            case ROBOT_2021:
+            default:
 
-        // get the carousel
-        carousel = new Carousel();
-        carousel.init(hardwareMap);
-        carousel.spin(0.0);
+                // get the end actuator
+                armMotor = new ArmMotor();
+                armMotor.init(hardwareMap);
+
+                // get the arm
+                arm = new Arm();
+                arm.init(hardwareMap);
+                //arm.setLevel(Arm.Level.LEVEL3);
+                arm.zero();
+
+                // get the carousel
+                carousel = new Carousel();
+                carousel.init(hardwareMap);
+                carousel.spin(0.0);
+
+                break;
+        }
 
         // report the initialization
         telemetry.addData("Drive motors", "initialized");
@@ -69,6 +86,8 @@ public class DriveSimple extends OpMode {
             telemetry.addData("distance", "rev 2m: %8.2f inch",
                     distanceSensorRev2m.getDistance(DistanceUnit.INCH));
         }
+
+        telemetry.addData("Robot", Motion.robot);
     }
 
     @Override
@@ -92,33 +111,61 @@ public class DriveSimple extends OpMode {
         // report position
         Motion.reportPosition(telemetry);
 
-        // use the game pad to operate the intake
-        if (gamepad2.a) {
-            armMotor.intake();
-        }
-        if (gamepad2.b) {
-            armMotor.outtake();
-        }
+        switch (Motion.robot) {
+            case ROBOT_2020:
+                telemetry.addData("Shooter", "test");
+                if (gamepad1.right_trigger > 0.5) {
+                    // on right trigger, spin up the shooter
+                    shooter.startShooters();
+                    telemetry.addData("Shooter", "spin up");
 
-        // armMotor.setPosition(-gamepad1.right_stick_y);
+                    if (gamepad1.right_bumper) {
+                        // if spinning up, then we can shoot
+                        shooter.servoPushRing();
+                    }
+                    else {
+                        shooter.reloadServo();
+                    }
+                }
+                else {
+                    // if we are not spinning up, reset everything
+                    shooter.stopShooters();
+                    shooter.reloadServo();
+                }
+                break;
 
-        // TODO: does not work
-        if (false) {
-            arm.setEncoder(1-gamepad1.left_trigger);
-            telemetry.addData("Arm ", gamepad1.left_trigger);
+            case ROBOT_2021:
+            default:
+
+                // use the game pad to operate the intake
+                if (gamepad2.a) {
+                    armMotor.intake();
+                }
+                if (gamepad2.b) {
+                    armMotor.outtake();
+                }
+
+                // armMotor.setPosition(-gamepad1.right_stick_y);
+
+                // TODO: does not work
+                if (false) {
+                    arm.setEncoder(1 - gamepad1.left_trigger);
+                    telemetry.addData("Arm ", gamepad1.left_trigger);
+                } else {
+                    if (gamepad2.dpad_down) arm.setLevel(Arm.Level.GROUND);
+                    if (gamepad2.dpad_left) arm.setLevel(Arm.Level.LEVEL1);
+                    if (gamepad2.dpad_up) arm.setLevel(Arm.Level.LEVEL2);
+                    if (gamepad2.dpad_right) arm.setLevel(Arm.Level.LEVEL3);
+
+                    telemetry.addData("Arm", "Arm height %.01f inches, %d ticks", arm.getHeightInch(), arm.armMotor.getCurrentPosition());
+                }
+
+                carousel.spin(gamepad2.right_trigger);
+                telemetry.addData("Carousel", carousel.getRelativeVelocity());
+                telemetry.addData("c motor", carousel.carouselMotor.getVelocity());
+
+                break;
         }
-        else {
-            if (gamepad2.dpad_down) arm.setLevel(Arm.Level.GROUND);
-            if (gamepad2.dpad_left) arm.setLevel(Arm.Level.LEVEL1);
-            if (gamepad2.dpad_up) arm.setLevel(Arm.Level.LEVEL2);
-            if (gamepad2.dpad_right) arm.setLevel(Arm.Level.LEVEL3);
-
-            telemetry.addData("Arm", "Arm height %.01f inches, %d ticks", arm.getHeightInch(), arm.armMotor.getCurrentPosition());
-        }
-
-        carousel.spin(gamepad2.right_trigger);
-        telemetry.addData("Carousel", carousel.getRelativeVelocity());
-        telemetry.addData("c motor", carousel.carouselMotor.getVelocity());
 
         // use game pad 1 button x to reset the pose
         if (gamepad1.x) {

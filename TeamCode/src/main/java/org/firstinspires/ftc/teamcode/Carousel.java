@@ -58,6 +58,8 @@ import com.qualcomm.robotcore.util.Range;
 
 public class Carousel{
 
+    // TODO: gear ratio was changed; drive wheel diameter was changed
+
     DcMotorEx carouselMotor;
     double power = 1.0;
 

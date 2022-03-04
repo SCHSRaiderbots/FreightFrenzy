@@ -215,8 +215,8 @@ public class Motion {
 
             case ROBOT_2020:
                 // get the motors
-                dcmotorLeft = hardwareMap.get(DcMotorEx.class, "left_drive");
-                dcmotorRight = hardwareMap.get(DcMotorEx.class, "right_drive");
+                dcmotorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
+                dcmotorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
 
                 // set the motor directions
                 dcmotorLeft.setDirection(DcMotorSimple.Direction.FORWARD);
