@@ -104,8 +104,8 @@ class SCHSShooter {
 
     // start the shooter motors spinning
     public void startShooters() {
-        shooterMotorLeft.setVelocity(SHOOT_VEL);
-        shooterMotorRight.setVelocity(SHOOT_VEL - 100);
+        shooterMotorLeft.setVelocity(SHOOT_VEL + 100);
+        shooterMotorRight.setVelocity(SHOOT_VEL - 100 - 100);
     }
 
     public void stopShooters() {
