@@ -31,8 +31,6 @@ import java.util.Locale;
  *   vision = new Vision();
  *   vision.initVuforia(hardwareMap);
  *   vision.initTfod(hardwareMap);
- *
- *   TODO: static class? static methods?
  */
 public class Vision {
     /**
@@ -63,19 +61,21 @@ public class Vision {
     // Since ImageTarget trackables use mm to specify their dimensions, we must use mm for all the physical dimension.
     // define some constants and conversions here
     static final float mmPerInch        = 25.4f;
-    private static final float mmTargetHeight   = 6 * mmPerInch;          // the height of the center of the target image above the floor
+    // the height of the center of the target image above the floor
+    private static final float mmTargetHeight   = 6 * mmPerInch;
+    // TODO: these values are slightly off
     private static final float halfField        = 72 * mmPerInch;
     private static final float halfTile         = 12 * mmPerInch;
     private static final float oneAndHalfTile   = 36 * mmPerInch;
 
-    /* Note: This sample uses the all-objects Tensor Flow model (FreightFrenzy_BCDM.tflite), which contains
-     * the following 4 detectable objects
-     *  0: Ball,
-     *  1: Cube,
-     *  2: Duck,
-     *  3: Marker (duck location tape marker)
+    /*
+     * PowerPlay.tflite contains contains
+     *  0: Bolt,
+     *  1: Bulb,
+     *  2: Panel,
      *
-     *  Two additional model assets are available which only contain a subset of the objects:
+     *  FreightFrenzy model assets:
+     *  FreightFrenzy_BCDM.tflite 0: Ball, 1: Cube, 2: Duck, 3: Marker (duck location marker).
      *  FreightFrenzy_BC.tflite  0: Ball,  1: Cube
      *  FreightFrenzy_DM.tflite  0: Duck,  1: Marker
      */
@@ -91,8 +91,9 @@ public class Vision {
     // private static final String TFOD_MODEL_ASSET = "FreightFrenzy_BCDM.tflite";
     // private static final String[] LABELS = {"Ball", "Cube", "Duck", "Marker" };
 
+    /** Trackable navigation targets */
     VuforiaTrackables targets   = null ;
-    // the trackable navigation targets
+    /** trackable navigation targets */
     List<VuforiaTrackable> allTrackables = new ArrayList<>();
 
     /**
@@ -119,8 +120,9 @@ public class Vision {
         // set the webcam
         parameters.cameraName = webcamName;
         // Turn off Extended tracking.  Set this true if you want Vuforia to track beyond the target.
-        // TODO: what does this mean?
-        parameters.useExtendedTracking = false; //stops vision once the target objects are not in view
+        // TODO: what does that mean?
+        // stops vision once the target objects are not in view
+        parameters.useExtendedTracking = false;
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
@@ -130,6 +132,8 @@ public class Vision {
 
     /**
      * Initialize the TensorFlow Object Detection engine.
+     * Sets the confidence level and input size.
+     * Loads the models from the assets file.
      */
     void initTfod(HardwareMap hardwareMap) {
         int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
@@ -143,10 +147,14 @@ public class Vision {
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABELS); //what and why is it needed
     }
 
+    /**
+     * Report the detected objects on the telemetry channel.
+     * @param telemetry
+     */
     void reportDetections(Telemetry telemetry) {
         Locale locale = null;
 
-        // do we have an object detector
+        // do we have an object detector?
         if (tfod == null) {
             telemetry.addData("TFOD", "no detector!");
         }
@@ -162,10 +170,10 @@ public class Vision {
 
                 // step through the list of recognitions and display boundary info.
                 for (Recognition recognition : updatedRecognitions) {
-                    int width = recognition.getImageWidth();
-                    int height = recognition.getImageHeight();
-                    telemetry.addData("image size", "width %d height %d",
-                            width,height);
+                    // int width = recognition.getImageWidth();
+                    // int height = recognition.getImageHeight();
+                    // telemetry.addData("image size", "width %d height %d", width, height);
+
                     // TODO: filter the recognitions
                     // is it a reasonable object (e.g., just interested in ducks)
                     // is it a reasonable size (sometimes recognitions are huge)
@@ -177,27 +185,7 @@ public class Vision {
                                     recognition.getLeft(), recognition.getTop(),
                                     recognition.getRight(), recognition.getBottom(),
                                     recognition.getConfidence()));
-
-                    // this test ("==") relies on the strings being interned!
-                    //   recognition.getLabel() == "Duck"
-                    // this test will work as long as getLabel() does not return null
-                    //   recognition.getLabel().equals("Duck")
-                    if (recognition.getLabel().equals("Duck")) {
-                        float center= (recognition.getLeft()+recognition.getRight())/2;
-                        float delta=width/6.0f;
-                        float d1=(width/2.0f)-delta;
-                        float d2=(width/2.0f)+delta;
-                        if (center<d1){
-                            // GameConfig.barCode=GameConfig.BarCode.LEFT;
-                        }else if (center<d2){
-                            // GameConfig.barCode= GameConfig.BarCode.MIDDLE;
-                        }else{
-                            // GameConfig.barCode= GameConfig.BarCode.RIGHT;
-                        }
-                    }
-
-                    telemetry.addData("barCode:", "foo");
-                } // getLeft() etc gets the pixel coordinates for an image in tensorflow
+                }
             }
         }
 
@@ -211,7 +199,7 @@ public class Vision {
     void initTracking() {
         // Load the data sets for the trackable objects. These particular data
         // sets are stored in the 'assets' part of our application.
-        targets = vuforia.loadTrackablesFromAsset("FreightFrenzy");
+        targets = vuforia.loadTrackablesFromAsset("PowerPlay");
 
         // For convenience, gather together all the trackable objects in one easily-iterable collection */
         // clear the list (we do not want a second invocation keeping the old targets.
@@ -237,10 +225,10 @@ public class Vision {
          */
 
         // Name and locate each trackable object
-        identifyTarget(0, "Blue Storage", -halfField, oneAndHalfTile, mmTargetHeight, 90, 0, 90);
-        identifyTarget(1, "Blue Alliance Wall", halfTile, halfField, mmTargetHeight, 90, 0, 0);
-        identifyTarget(2, "Red Storage", -halfField, -oneAndHalfTile, mmTargetHeight, 90, 0, 90);
-        identifyTarget(3, "Red Alliance Wall", halfTile, -halfField, mmTargetHeight, 90, 0, 180);
+        identifyTarget(0, "Red Audience Wall",   -halfField,  -oneAndHalfTile, mmTargetHeight, 90, 0,  90);
+        identifyTarget(1, "Red Rear Wall",        halfField,  -oneAndHalfTile, mmTargetHeight, 90, 0, -90);
+        identifyTarget(2, "Blue Audience Wall",  -halfField,   oneAndHalfTile, mmTargetHeight, 90, 0,  90);
+        identifyTarget(3, "Blue Rear Wall",       halfField,   oneAndHalfTile, mmTargetHeight, 90, 0, -90);
 
         /*
          * Create a transformation matrix describing where the camera is on the robot.
@@ -277,19 +265,23 @@ public class Vision {
 
         // TODO: did not activate()
         // targets.activate();
-
     }
 
     /***
-     * Identify a target by naming it, and setting its position and orientation on the field
+     * Identify a target by naming it, and setting its position and orientation on the field.
      * @param targetIndex index of the target
      * @param targetName name to use for that index
      * @param dx, dy, dz  Target offsets in x,y,z axes
      * @param rx, ry, rz  Target rotations in x,y,z axes
      */
     void identifyTarget(int targetIndex, String targetName, float dx, float dy, float dz, float rx, float ry, float rz) {
+        /** The target object */
         VuforiaTrackable aTarget = targets.get(targetIndex);
+
+        // set its name
         aTarget.setName(targetName);
+
+        // set its location and orientation
         aTarget.setLocation(OpenGLMatrix.translation(dx, dy, dz)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, rx, ry, rz)));
     }
@@ -309,7 +301,7 @@ public class Vision {
 
         // check all the trackable targets to see which one (if any) is visible.
         for (VuforiaTrackable trackable : allTrackables) {
-            if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
+            if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
                 // found a visible target
                 telemetry.addData("Visible Target", trackable.getName());
 
@@ -318,11 +310,13 @@ public class Vision {
 
                 // getUpdatedRobotLocation() will return null if no new information is available since
                 // the last time that call was made, or if the trackable is not currently visible.
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
                 // if the location is not null, then use it
                 if (robotLocationTransform != null) {
                     lastLocation = robotLocationTransform;
                 }
+
+                // if we saw a trackable, then we probably cannot see any others...
                 break;
             }
         }
