@@ -32,8 +32,18 @@ public class VisionTest extends OpMode {
     // the Vision object
     Vision vision;
 
+    /** the LynxModule serial number */
+    String strSerialNumber;
+
     @Override
     public void init() {
+        // get the serial number
+        // TODO: use serial number to identify robot?
+        strSerialNumber = LogDevice.getSerialNumber(hardwareMap);
+
+        // report the LynxModules
+        LogDevice.dumpFirmware(hardwareMap);
+
         // create the vision object
         vision = new Vision();
 
@@ -55,10 +65,12 @@ public class VisionTest extends OpMode {
 
     @Override
     public void init_loop() {
+        // report the serial number during init
+        // this causes an update, so it will flash the display
+        // telemetry.addData("Serial Number", strSerialNumber);
+
         // report detected objects
         vision.reportDetections(telemetry);
-
-        vision.reportTracking(telemetry);
     }
 
     @Override
