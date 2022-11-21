@@ -68,6 +68,11 @@ public class Vision {
     private static final float halfTile         = 12 * mmPerInch;
     private static final float oneAndHalfTile   = 36 * mmPerInch;
 
+    // these are hack values for updating the pose
+    static double inchX = 0;
+    static double inchY = 0;
+    static double degTheta = 0;
+
     /*
      * PowerPlay.tflite contains contains
      *  0: Bolt,
@@ -331,9 +336,14 @@ public class Vision {
             telemetry.addData("Pos (inches)", "{X, Y, Z} = %.1f, %.1f, %.1f",
                     translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
 
+            // remember the values
+            inchX = translation.get(0) / mmPerInch;
+            inchY = translation.get(1) / mmPerInch;
+
             // report the rotation of the robot in degrees.
             Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
             telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
+            degTheta = rotation.thirdAngle;
         } else {
             // nothing was visible
             telemetry.addData("Visible Target", "none");

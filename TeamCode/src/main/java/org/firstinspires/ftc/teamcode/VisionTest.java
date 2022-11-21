@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import android.util.Log;
 
@@ -68,6 +69,9 @@ public class VisionTest extends OpMode {
             // (typically 16/9).
             // vision.tfod.setZoom(1.25, 16.0 / 9.0);
         }
+
+        // initialize motion
+        Motion.init(hardwareMap);
     }
 
     @Override
@@ -78,6 +82,8 @@ public class VisionTest extends OpMode {
 
         // report detected objects
         vision.reportDetections(telemetry);
+
+        Motion.updateRobotPose();
     }
 
     @Override
@@ -91,12 +97,30 @@ public class VisionTest extends OpMode {
         } else {
             vision.targets.activate();
         }
+
+        // run using power
+        Motion.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     @Override
     public void loop() {
+        // update the robot pose
+        Motion.updateRobotPose();
+        Motion.reportPosition(telemetry);
+
         // report targets in view
         vision.reportTracking(telemetry);
+
+        if (gamepad1.y) {
+            // set the pose
+            Motion.setPoseInches(Vision.inchX, Vision.inchY, Vision.degTheta);
+        }
+
+        // do some driving
+        double forw = -gamepad1.left_stick_y;
+        double turn = 0.7 * gamepad1.right_stick_x;
+
+        Motion.setPower(forw+turn, forw-turn);
     }
 
     @Override
