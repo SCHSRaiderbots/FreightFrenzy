@@ -23,14 +23,14 @@ import java.util.Locale;
  * At the end of the Autonomous routine, the robot will have an updated position.
  * By using static variables, the succeeding TeleOp routine will know the robot's position.
  *
- * This code is borrowing from 2019 and 2020 robot code
+ * This code is borrowing from 2019, 2020, and 2021 robot code
  *
  * So the OpMode should:
  * tell this class which motors are being used:
  *   Motion.setRobot(DcMotorLeft, DCMotorRight);
  * tell this class the robot dimensions:
  *   Motion.setRobot2019();
- * and then make periodic calls to update the robot position:
+ * and then make periodic calls to update the robot pose:
  *   Motion.updateRobotPose()
  * the current position may be accessed with
  *   Motion.xPose, Motion.yPose, Motion.thetaPose
@@ -53,11 +53,11 @@ public class Motion {
     // The HD Hex Motor is also used with the UltraPlanetary cartridges.
     // These values are used to calculate actual gear ratios
     // The ring gear has 55 teeth
-    //    the 3:1 cartridge is actually 84:29 (2.9...) = (55+29)/29
-    //    the 4:1 cartridge is actually 76:21 (3.6...) = (55+21)/21
-    //    the 5:1 cartridge is actually 68:13 (5.2...) = (55+13)/13
+    // The 3:1 cartridge is actually 84:29 (2.9...) = (55+29)/29
     public static final double HD_HEX_GEAR_CART_3_1 = 84.0/29.0;
+    // The 4:1 cartridge is actually 76:21 (3.6...) = (55+21)/21
     public static final double HD_HEX_GEAR_CART_4_1 = 76.0/21.0;
+    // The 5:1 cartridge is actually 68:13 (5.2...) = (55+13)/13
     public static final double HD_HEX_GEAR_CART_5_1 = 68.0/13.0;
 
     /**
@@ -72,7 +72,17 @@ public class Motion {
      *   camera location (x, y, z, rx, ry, rz)
      */
     public enum Robot {
-        ROBOT_2018, ROBOT_2019, ROBOT_2020, ROBOT_2021, ROBOT_MECANUM
+        /** Rover Ruckus */
+        ROBOT_2018,
+        /** Skystone */
+        ROBOT_2019,
+        /** Ultimate Goal */
+        ROBOT_2020,
+        /** Freight Frenzy Robot */
+        ROBOT_2021,
+        /** PowerPlay */
+        ROBOT_2022,
+        ROBOT_MECANUM
     }
     /** The robot being used. Defaults to ROBOT_2021. */
     public static Robot robot = Robot.ROBOT_2021;
@@ -80,11 +90,14 @@ public class Motion {
     // robot parameters
 
     // the wheel diameters are 90mm nominal
+    /** Left wheel diameter (meters) */
     static private double mWheelDiameterLeft = 0.090;
+    /** Right wheel diameter (meters) */
     static private double mWheelDiameterRight = 0.090;
 
     // half the distance between the wheels
     // the new wheel separation 13 + 15/16
+    /** Distance between the left and right wheels (meters) */
     static double distWheel = (14.0 - (1.0/16.0)) * 0.0254 / 2;
 
     // calculate the wheel's ticks per revolution
@@ -95,7 +108,9 @@ public class Motion {
     //   leaving the units vague at this point
 
     // the distance per tick for each wheel = circumference / ticks
+    /** Distance traveled per encoder tick for the left wheel (meters/tick) */
     static private double distpertickLeft = mWheelDiameterLeft * Math.PI / (ticksPerWheelRev);
+    /** Distance traveled per encoder tick for the right wheel (meters/tick) */
     static private double distpertickRight = mWheelDiameterRight * Math.PI / (ticksPerWheelRev);
 
     // the robot pose
@@ -105,10 +120,11 @@ public class Motion {
     //     When TeleOp starts, it can use the existing Pose
     //        If there was no autonomous, then initial Pose is random
     //        A button press during TeleOp's init_loop could set a known Pose
-    // these values are in meters
+    /** pose x-position in meters */
     static double xPose = 0.0;
+    /** pose y-position in meters */
     static double yPose = 0.0;
-    // angle is in radians
+    /** pose angle in radians */
     static double thetaPose = 0.0;
 
     // Inch versions of the robot pose
@@ -116,6 +132,7 @@ public class Motion {
     static double yPoseInches = 0.0;
     static double thetaPoseDegrees = 0.0;
 
+    // motors used to drive the differential robot
     static private DcMotorEx dcmotorLeft;
     static private DcMotorEx dcmotorRight;
 
@@ -173,6 +190,7 @@ public class Motion {
         // dump the firmware
         LogDevice.dumpFirmware(hardwareMap);
 
+        // TODO: don't identify the robot within this code...
         // identify the robot
         identifyRobot(hardwareMap);
 
@@ -210,6 +228,14 @@ public class Motion {
                 break;
 
             case ROBOT_2019:
+                // get the motors
+                dcmotorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
+                dcmotorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
+
+                // set the motor directions
+                dcmotorLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+                dcmotorRight.setDirection(DcMotorSimple.Direction.FORWARD);
+
                 setRobotDims2019();
                 break;
 
@@ -248,8 +274,6 @@ public class Motion {
                 setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRUE);
                 setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfR2P);
 
-
-
                 setMotorToleranceInches(0.3);
 
                 break;
@@ -262,6 +286,7 @@ public class Motion {
         cEncoderLeft = dcmotorLeft.getCurrentPosition();
         cEncoderRight = dcmotorRight.getCurrentPosition();
 
+        // TODO: take this out
         // set Run to Position mode
         dcmotorLeft.setTargetPosition(dcmotorLeft.getCurrentPosition());
         dcmotorRight.setTargetPosition(dcmotorRight.getCurrentPosition());
@@ -294,17 +319,8 @@ public class Motion {
 
     /**
      * Set the drive motor power levels.
-     * @param power power level (0 to 1)
-     */
-    static void setPower(double power) {
-        dcmotorLeft.setPower(power);
-        dcmotorRight.setPower(power);
-    }
-
-    /**
-     * Set the drive motor power levels.
-     * @param powerLeft power level for left motor
-     * @param powerRight power level for right motor
+     * @param powerLeft power level for left motor (-1 to 1)
+     * @param powerRight power level for right motor (-1 to 1)
      */
     static void setPower(double powerLeft, double powerRight) {
         dcmotorLeft.setPower(powerLeft);
@@ -312,10 +328,21 @@ public class Motion {
     }
 
     /**
-     * Set the drive motor target velocities. (RunMode should be RUN_USING_ENCODER.)
+     * Set the drive motor power levels.
+     * @param power power level (-1 to 1)
+     */
+    static void setPower(double power) {
+        setPower(power, power);
+    }
+
+    /**
+     * Set the drive motor target velocities.
+     * <p>
+     *     RunMode should e RUN_USING_ENCODER.
+     * </p>
      * TODO: velocity is not abstract; it is ticksPerSecond
-     * @param velocityLeft velocity for left motor
-     * @param velocityRight velocity for right motor
+     * @param velocityLeft velocity for left motor (ticks/second)
+     * @param velocityRight velocity for right motor (ticks/second)
      */
     static void setVelocity(double velocityLeft, double velocityRight) {
         dcmotorLeft.setVelocity(velocityLeft);
@@ -324,7 +351,7 @@ public class Motion {
 
     /**
      * Set the drive motor target velocity. (RunMode should be RUN_USING_ENCODER.)
-     * @param velocity velocity for the motors
+     * @param velocity velocity for the motors (ticks/second)
      */
     static void setVelocity(double velocity) {
         setVelocity(velocity, velocity);

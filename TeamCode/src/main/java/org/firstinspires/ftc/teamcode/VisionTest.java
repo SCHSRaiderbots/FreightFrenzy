@@ -71,6 +71,9 @@ public class VisionTest extends OpMode {
         }
 
         // initialize motion
+        // Motion.identifyRobot(hardwareMap);
+
+        Motion.robot = Motion.Robot.ROBOT_2019;
         Motion.init(hardwareMap);
     }
 
@@ -83,6 +86,7 @@ public class VisionTest extends OpMode {
         // report detected objects
         vision.reportDetections(telemetry);
 
+        // update the robot pose
         Motion.updateRobotPose();
     }
 
@@ -117,8 +121,8 @@ public class VisionTest extends OpMode {
         }
 
         // do some driving
-        double forw = -gamepad1.left_stick_y;
-        double turn = 0.7 * gamepad1.right_stick_x;
+        double forw = -0.7 * gamepad1.left_stick_y;
+        double turn = 0.4 * gamepad1.right_stick_x;
 
         Motion.setPower(forw+turn, forw-turn);
     }

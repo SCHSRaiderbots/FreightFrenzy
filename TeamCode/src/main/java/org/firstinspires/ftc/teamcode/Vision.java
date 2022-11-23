@@ -62,9 +62,13 @@ public class Vision {
     // define some constants and conversions here
     static final float mmPerInch        = 25.4f;
     // the height of the center of the target image above the floor
+    // TODO: check the dimensions
+    // https://firstinspiresst01.blob.core.windows.net/first-energize-ftc/field-setup-and-assembly-guide.pdf
+    // page 22 says the horizontal center line is 6.375 from the floor or 5.75 inches from top of the tile
     private static final float mmTargetHeight   = 6 * mmPerInch;
     // TODO: these values are slightly off
     private static final float halfField        = 72 * mmPerInch;
+    // the pitch of the tiles is 23 5/8
     private static final float halfTile         = 12 * mmPerInch;
     private static final float oneAndHalfTile   = 36 * mmPerInch;
 
@@ -74,7 +78,7 @@ public class Vision {
     static double degTheta = 0;
 
     /*
-     * PowerPlay.tflite contains contains
+     * PowerPlay.tflite contains
      *  0: Bolt,
      *  1: Bulb,
      *  2: Panel,
@@ -86,7 +90,6 @@ public class Vision {
      */
     private static final String TFOD_MODEL_ASSET = "PowerPlay.tflite";
     // private static final String TFOD_MODEL_FILE  = "/sdcard/FIRST/tflitemodels/CustomTeamModel.tflite";
-
     private static final String[] LABELS = {
             "1 Bolt",
             "2 Bulb",
@@ -98,7 +101,7 @@ public class Vision {
 
     /** Trackable navigation targets */
     VuforiaTrackables targets   = null ;
-    /** trackable navigation targets */
+    /** Trackable navigation targets */
     List<VuforiaTrackable> allTrackables = new ArrayList<>();
 
     /**
@@ -255,10 +258,17 @@ public class Vision {
          *      In this example, it is centered on the robot (left-to-right and front-to-back), and 6 inches above ground level.
          */
         // TODO: fix camera displacement issues
+        // this assumes the camera location is fixed on the robot.
+        // assume directed on the x-axis with displacements from center of rotation
+        //   the displacement will be different for each robot
         final float CAMERA_FORWARD_DISPLACEMENT = 0.0f * mmPerInch;   // eg: Enter the forward distance from the center of the robot to the camera lens
         final float CAMERA_VERTICAL_DISPLACEMENT = 6.0f * mmPerInch;   // eg: Camera is 6 Inches above ground
         final float CAMERA_LEFT_DISPLACEMENT = 0.0f * mmPerInch;   // eg: Enter the left distance from the center of the robot to the camera lens
-
+        // in addition to the displacement, we need to orient the camera
+        // The camera produces x, y values, but we need to shift those coordinates to be looking down the x-axis
+        //   I'm confused by this transform
+        //   rotate 90 about the x-axis puts the image upright
+        //   rotate 90 about the z-axis aligns with the x-axis (but should it be -90?)
         OpenGLMatrix cameraLocationOnRobot = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XZY, DEGREES, 90, 90, 0));
