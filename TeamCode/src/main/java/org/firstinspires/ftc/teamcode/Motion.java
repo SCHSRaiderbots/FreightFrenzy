@@ -22,18 +22,21 @@ import java.util.Locale;
  * For example, an Autonomous routine might set a particular starting position.
  * At the end of the Autonomous routine, the robot will have an updated position.
  * By using static variables, the succeeding TeleOp routine will know the robot's position.
- *
+ * <p>
  * This code is borrowing from 2019, 2020, and 2021 robot code
- *
- * So the OpMode should:
- * tell this class which motors are being used:
- *   Motion.setRobot(DcMotorLeft, DCMotorRight);
- * tell this class the robot dimensions:
- *   Motion.setRobot2019();
- * and then make periodic calls to update the robot pose:
- *   Motion.updateRobotPose()
- * the current position may be accessed with
- *   Motion.xPose, Motion.yPose, Motion.thetaPose
+ * </p>
+ * <p>
+ * So the OpMode should:</p>
+ * <ol>
+ * <li>tell this class which motors are being used:
+ *   Motion.setRobot(DcMotorLeft, DCMotorRight);</li>
+ * <li>tell this class the robot dimensions:
+ *   Motion.setRobot2019();</li>
+ * <li>and then make periodic calls to update the robot pose:
+ *   Motion.updateRobotPose()</li>
+ * <li>the current position may be accessed with
+ *   Motion.xPose, Motion.yPose, Motion.thetaPose</li>
+ * </ol>
  */
 public class Motion {
 
@@ -85,7 +88,7 @@ public class Motion {
         ROBOT_MECANUM
     }
     /** The robot being used. Defaults to ROBOT_2021. */
-    public static Robot robot = Robot.ROBOT_2021;
+    public static Robot robot = Robot.ROBOT_2022;
 
     // robot parameters
 
@@ -95,12 +98,10 @@ public class Motion {
     /** Right wheel diameter (meters) */
     static private double mWheelDiameterRight = 0.090;
 
-    // half the distance between the wheels
-    // the new wheel separation 13 + 15/16
-    /** Distance between the left and right wheels (meters) */
+    /** Half the distance between the left and right wheels (meters) */
     static double distWheel = (14.0 - (1.0/16.0)) * 0.0254 / 2;
 
-    // calculate the wheel's ticks per revolution
+    /** motor tick per wheel revolution */
     static double ticksPerWheelRev = HD_HEX_TICKS_PER_REV * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1;
 
     // derived robot parameters
@@ -170,16 +171,7 @@ public class Motion {
             robot = Robot.ROBOT_2020;
         }
 
-        // TODO: I believe this is no longer true
-        // the 2020 robot configuration uses left_drive and right_drive.
-        DcMotorEx dcMotorEx = hardwareMap.tryGet(DcMotorEx.class, "left_drive");
-        if (dcMotorEx != null) {
-            // found the 2020 robot
-            robot = Robot.ROBOT_2020;
-        }
-
         // we did not find any evidence to contrary, assume robot was set correctly...
-        // currently defaults to 2021 robot...
     }
 
     /**
@@ -192,7 +184,7 @@ public class Motion {
 
         // TODO: don't identify the robot within this code...
         // identify the robot
-        identifyRobot(hardwareMap);
+        // identifyRobot(hardwareMap);
 
         // initialize the robot
         switch (robot) {
@@ -252,7 +244,6 @@ public class Motion {
                 break;
 
             case ROBOT_2021:
-            default:
                 // get the motors
                 dcmotorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
                 dcmotorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
@@ -262,6 +253,33 @@ public class Motion {
                 dcmotorRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
                 setRobotDims2021();
+
+
+                rpm = 6000.0;
+
+                revsPerSecond = rpm / 60.0;
+                ticksPerRev = 56.0;
+                f = 32000.0 / (ticksPerRev * revsPerSecond);
+                pidfRUE = new PIDFCoefficients(10, 1, 0, f, MotorControlAlgorithm.PIDF);
+                pidfR2P = new PIDFCoefficients(10, 0, 0, 0, MotorControlAlgorithm.PIDF);
+                setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRUE);
+                setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfR2P);
+
+                setMotorToleranceInches(0.3);
+
+                break;
+
+            case ROBOT_2022:
+            default:
+                // get the motors
+                dcmotorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
+                dcmotorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
+
+                // set the motor directions
+                dcmotorLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+                dcmotorRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+                setRobotDims2022();
 
 
                 rpm = 6000.0;
@@ -323,6 +341,7 @@ public class Motion {
      * @param powerRight power level for right motor (-1 to 1)
      */
     static void setPower(double powerLeft, double powerRight) {
+        // set the power level for both motors
         dcmotorLeft.setPower(powerLeft);
         dcmotorRight.setPower(powerRight);
     }
@@ -332,6 +351,7 @@ public class Motion {
      * @param power power level (-1 to 1)
      */
     static void setPower(double power) {
+        // set the power level
         setPower(power, power);
     }
 
@@ -345,6 +365,7 @@ public class Motion {
      * @param velocityRight velocity for right motor (ticks/second)
      */
     static void setVelocity(double velocityLeft, double velocityRight) {
+        // set the velocity for each motor
         dcmotorLeft.setVelocity(velocityLeft);
         dcmotorRight.setVelocity(velocityRight);
     }
@@ -354,6 +375,7 @@ public class Motion {
      * @param velocity velocity for the motors (ticks/second)
      */
     static void setVelocity(double velocity) {
+        // set the velocity
         setVelocity(velocity, velocity);
     }
 
@@ -362,6 +384,7 @@ public class Motion {
      * @param runMode RunMode to use, e.g., RunMode.RUN_TO_POSITION.
      */
     static void setMode(DcMotor.RunMode runMode) {
+        // set the mode for both motors
         dcmotorLeft.setMode(runMode);
         dcmotorRight.setMode(runMode);
     }
@@ -372,6 +395,7 @@ public class Motion {
      * @param pidfCoefficients the desired coefficients
      */
     static void setPIDFCoefficients(DcMotor.RunMode runMode, PIDFCoefficients pidfCoefficients) {
+        // set the PIDF values for both motors
         dcmotorLeft.setPIDFCoefficients(runMode, pidfCoefficients);
         dcmotorRight.setPIDFCoefficients(runMode, pidfCoefficients);
     }
@@ -474,6 +498,26 @@ public class Motion {
     }
 
     /**
+     * Set Robot Dims for the Freight Frenzy robot.
+     */
+    static void setRobotDims2022() {
+        // set the wheel diameters to 90 mm
+        mWheelDiameterLeft = 0.090;
+        mWheelDiameterRight = 0.090;
+
+        // set the wheel half separation
+        distWheel = (7.6 * 1.027 * 0.0254) / 2.0;
+
+        // ticks per wheel revolution
+        // The motor has a 45-tooth gear, and the wheel has a 90-tooth sprocket.
+        ticksPerWheelRev = HD_HEX_TICKS_PER_REV * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1 * (90.0 / 45.0);
+
+        // derived values
+        distpertickLeft = mWheelDiameterLeft * Math.PI / (ticksPerWheelRev);
+        distpertickRight = mWheelDiameterRight * Math.PI / (ticksPerWheelRev);
+    }
+
+    /**
      * Set the important dimensions of the robot.
      * Depends on variable robot.
      */
@@ -489,8 +533,11 @@ public class Motion {
                 setRobotDims2020();
                 break;
             case ROBOT_2021:
-            default:
                 setRobotDims2021();
+                break;
+            case ROBOT_2022:
+            default:
+                setRobotDims2022();
                 break;
         }
     }
