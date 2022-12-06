@@ -141,7 +141,7 @@ public class VisionTest extends OpMode {
             vision.targets.activate();
         }
 
-        Motion.setPoseInches(0,0,0);
+        // Motion.setPoseInches(0,0,0);
 
         // run using power
         Motion.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

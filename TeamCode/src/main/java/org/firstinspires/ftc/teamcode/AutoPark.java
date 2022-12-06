@@ -38,15 +38,28 @@ public class AutoPark extends OpMode {
     /** the LynxModule serial number */
     String strSerialNumber;
 
+    /** We can be on the BLUE or the RED alliance */
+    enum Alliance {BLUE, RED}
+    /** Our current alliance */
+    Alliance alliance = Alliance.RED;
+
+    /** We can start in the left or the right position */
+    enum StartPos {LEFT, RIGHT}
+    /** assume we start in the right position */
+    StartPos startPos = StartPos.RIGHT;
+    enum State {
+        STATE_START,
+        STATE_MOVE,
+        STATE_TURN,
+        STATE_BACK,
+        STATE_PARK
+    }
+    State state= State.STATE_START;
+
+
+
     @Override
     public void init() {
-        // get the serial number
-        // TODO: use serial number to identify robot?
-        strSerialNumber = LogDevice.getSerialNumber(hardwareMap);
-
-        // report the LynxModules
-        LogDevice.dumpFirmware(hardwareMap);
-
         // create the vision object
         vision = new Vision();
 
@@ -54,7 +67,6 @@ public class AutoPark extends OpMode {
         vision.initVuforia(hardwareMap);
 
         // init tracking
-        // TODO: does not play well with others...
         vision.initTracking();
 
         // build an object detector
@@ -76,40 +88,72 @@ public class AutoPark extends OpMode {
         // Motion.identifyRobot(hardwareMap);
         robot = Motion.Robot.ROBOT_2022;
         Motion.init(hardwareMap);
+
+        // set the initial position
+        setPose();
     }
 
     @Override
     public void init_loop() {
-        // report the serial number during init
-        // this causes an update, so it will flash the display
-        // telemetry.addData("Serial Number", strSerialNumber);
-
-        // report detected objects
-        vision.reportDetections(telemetry);
+        // report the robot
+        telemetry.addData("Robot", robot);
 
         // update the robot pose
         Motion.updateRobotPose();
+
+        // report our position
+        Motion.reportPosition(telemetry);
+
+        // report detected objects
+        // vision.reportDetections(telemetry);
+        vision.readSignal();
+        telemetry.addData("Signal", vision.signal);
+
+        // set the alliance
+        if (gamepad1.x) {
+            alliance = Alliance.BLUE;
+            setPose();
+        }
+        if (gamepad1.b) {
+            alliance = Alliance.RED;
+            setPose();
+        }
+
+        // set the starting position
+        if (gamepad1.dpad_left) {
+            startPos = StartPos.LEFT;
+            setPose();
+        }
+        if (gamepad1.dpad_right) {
+            startPos = StartPos.RIGHT;
+            setPose();
+        }
     }
 
     @Override
     public void start() {
         // report current status
         telemetry.addData("Navigation", "On");
+
+        // we are no longer interested in object detection
         vision.tfod.deactivate();
 
+        // we are interested in navigation targets
         if (vision.targets == null) {
             Log.d("vision.targets", "is null!");
         } else {
             vision.targets.activate();
         }
 
-        Motion.setPoseInches(0,0,0);
-
-        // run using power
+        // run using position
         Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         Motion.setPower(0.5);
-        Motion.moveInches(24);
+
+        Motion.moveInches(51);
+
+
+
     }
 
     @Override
@@ -117,8 +161,6 @@ public class AutoPark extends OpMode {
         // update the robot pose
         Motion.updateRobotPose();
         Motion.reportPosition(telemetry);
-
-        telemetry.addData("Robot", robot);
 
         // report targets in view
         vision.reportTracking(telemetry);
@@ -132,6 +174,33 @@ public class AutoPark extends OpMode {
         double forward = -0.7 * gamepad1.left_stick_y;
         double turn = 0.4 * gamepad1.right_stick_x;
 
+        switch (state) {
+            case STATE_START:
+                if (Motion.finished() && gamepad1.a){
+                    Motion.headTowardInches(60, -12);
+                    state = State.STATE_TURN;
+                }
+                break;
+
+            case STATE_TURN:
+                if (Motion.finished() && gamepad1.a) {
+                    Motion.moveInches(Motion.distanceToInches(60,-12));
+                    state= State.STATE_MOVE;
+                }
+                break;
+
+            case STATE_MOVE:
+                if (Motion.finished() && gamepad1.a){
+                    Motion.moveInches(-Motion.distanceToInches(12,-12));
+                    state= State.STATE_BACK;
+                }
+
+        }
+
+
+
+
+
         // Motion.setPower(forward+turn, forward-turn);
     }
 
@@ -139,6 +208,30 @@ public class AutoPark extends OpMode {
     public void stop() {
         // turn off tracking
         vision.targets.deactivate();
+    }
+
+    /**
+     * Set the robot pose based on alliance and starting position
+     */
+    public void setPose() {
+        double robotBackDistance = 7.75;
+        double dx = 36.0;
+        double fy = 72.0 - robotBackDistance;
+
+        if (startPos == StartPos.LEFT) {
+            if (alliance == Alliance.RED) {
+                Motion.setPoseInches(-dx, -fy, 90.0);
+            } else {
+                Motion.setPoseInches(+dx, +fy, -90.0);
+            }
+        } else {
+            // starting position is RIGHT
+            if (alliance == Alliance.RED) {
+                Motion.setPoseInches(+dx, -fy, +90.0);
+            } else {
+                Motion.setPoseInches(-dx, +fy, -90.0);
+            }
+        }
     }
 
 }
