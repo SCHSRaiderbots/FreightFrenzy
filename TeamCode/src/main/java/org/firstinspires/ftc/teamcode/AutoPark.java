@@ -49,9 +49,18 @@ public class AutoPark extends OpMode {
     StartPos startPos = StartPos.RIGHT;
     enum State {
         STATE_START,
-        STATE_MOVE,
-        STATE_TURN,
+        STATE_TURN1,
+        STATE_MOVE1,
         STATE_BACK,
+        STATE_TURN2,
+        STATE_MOVE2,
+        STATE_TURN3,
+        STATE_MOVE3,
+        STATE_TURN4,
+        STATE_MOVE4,
+        STATE_MOVE5,
+        STATE_MOVE6,
+        STATE_END,
         STATE_PARK
     }
     State state= State.STATE_START;
@@ -148,7 +157,7 @@ public class AutoPark extends OpMode {
         // run using position
         Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        Motion.setPower(0.5);
+        Motion.setPower(0.65);
 
         Motion.moveInches(51);
 
@@ -176,24 +185,79 @@ public class AutoPark extends OpMode {
 
         switch (state) {
             case STATE_START:
-                if (Motion.finished() && gamepad1.a){
-                    Motion.headTowardInches(60, -12);
-                    state = State.STATE_TURN;
+                if (Motion.finished()){
+                    Motion.headTowardInches(24, 0);
+                    state = State.STATE_TURN1;
                 }
                 break;
 
-            case STATE_TURN:
-                if (Motion.finished() && gamepad1.a) {
+            case STATE_TURN1:
+                if (Motion.finished()) {
+                    Motion.moveInches(Motion.distanceToInches(24,0)-9);
+                    state= State.STATE_MOVE1;
+                }
+                break;
+
+            case STATE_MOVE1:
+                if (Motion.finished()){
+                    Motion.moveInches(-Motion.distanceToInches(36,-12));
+                    state= State.STATE_TURN2;
+                }
+                break;
+            case STATE_TURN2:
+                if (Motion.finished()){
+                    Motion.headTowardInches(72, -12);
+                    state = State.STATE_MOVE2;
+                }
+                break;
+            case STATE_MOVE2:
+                if (Motion.finished()){
                     Motion.moveInches(Motion.distanceToInches(60,-12));
-                    state= State.STATE_MOVE;
+                    state=State.STATE_MOVE3;
+                }
+                break;
+            case STATE_MOVE3:
+                if (Motion.finished()){
+                    Motion.moveInches(-Motion.distanceToInches(12,-12));
+                    state= State.STATE_TURN3;
+                }
+                break;
+            case STATE_TURN3:
+                if (Motion.finished()){
+                    Motion.headTowardInches(0, -24);
+                    state = State.STATE_MOVE4;
+                }
+                break;
+            case STATE_MOVE4:
+                if (Motion.finished()){
+                    Motion.moveInches(Motion.distanceToInches(0,-24)-9);
+                    state= State.STATE_MOVE5;
+                }
+                break;
+            case STATE_MOVE5:
+                if (Motion.finished()){
+                    Motion.moveInches(-Motion.distanceToInches(0,-24));
+                    state= State.STATE_TURN4;
+                }
+                break;
+            case STATE_TURN4:
+                if (Motion.finished()){
+                    Motion.headTowardInches(72, -12);
+                    state = State.STATE_MOVE6;
+                }
+                break;
+            case STATE_MOVE6:
+                if (Motion.finished()){
+                    Motion.moveInches(Motion.distanceToInches(60,-12));
+                    state= State.STATE_END;
+                }
+                break;
+            case STATE_END:
+                if (Motion.finished()){
+
                 }
                 break;
 
-            case STATE_MOVE:
-                if (Motion.finished() && gamepad1.a){
-                    Motion.moveInches(-Motion.distanceToInches(12,-12));
-                    state= State.STATE_BACK;
-                }
 
         }
 
