@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.Motion.metersPerTile;
 import static org.firstinspires.ftc.teamcode.Motion.robot;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -38,15 +39,6 @@ public class AutoPursuit extends OpMode {
     /** the LynxModule serial number */
     String strSerialNumber;
 
-    /** We can be on the BLUE or the RED alliance */
-    enum Alliance {BLUE, RED}
-    /** Our current alliance */
-    Alliance alliance = Alliance.RED;
-
-    /** We can start in the left or the right position */
-    enum StartPos {LEFT, RIGHT}
-    /** assume we start in the right position */
-    StartPos startPos = StartPos.RIGHT;
     enum State {
         STATE_START,
         STATE_TURN1,
@@ -104,7 +96,7 @@ public class AutoPursuit extends OpMode {
         Motion.init(hardwareMap);
 
         // set the initial position
-        setPose();
+        PowerPlay.init();
     }
 
     @Override
@@ -123,25 +115,8 @@ public class AutoPursuit extends OpMode {
         vision.readSignal();
         telemetry.addData("Signal", vision.signal);
 
-        // set the alliance
-        if (gamepad1.x) {
-            alliance = Alliance.BLUE;
-            setPose();
-        }
-        if (gamepad1.b) {
-            alliance = Alliance.RED;
-            setPose();
-        }
+        PowerPlay.init_loop(gamepad1);
 
-        // set the starting position
-        if (gamepad1.dpad_left) {
-            startPos = StartPos.LEFT;
-            setPose();
-        }
-        if (gamepad1.dpad_right) {
-            startPos = StartPos.RIGHT;
-            setPose();
-        }
     }
 
     @Override
@@ -169,11 +144,15 @@ public class AutoPursuit extends OpMode {
         yP1 = Motion.yPose;
 
         xP2 = Motion.xPose;
-        yP2 = 0.0 - 0.0254 * 12;
+        yP2 = -0.5 * Motion.metersPerTile;
 
         vel = 0.0;
     }
 
+    /**
+     * Pursue a line segment.
+     * @return true if finished
+     */
     boolean pursuit() {
         // want to follow the path P1 to P2
         double dx = xP2 - xP1;
@@ -212,6 +191,9 @@ public class AutoPursuit extends OpMode {
         // angle to turn
         double radTurn = Motion.thetaPose - radLA;
 
+        if (radTurn < -Math.PI) radTurn += 2 * Math.PI;
+        if (radTurn > Math.PI) radTurn -= 2 * Math.PI;
+
         Motion.setVelocity(forw + 0.3 * forw * radTurn, forw - 0.3 * forw * radTurn);
 
         return retval;
@@ -228,26 +210,40 @@ public class AutoPursuit extends OpMode {
 
         switch (state) {
             case STATE_START:
-                if (pursuit()){
+                if (pursuit()) {
+
+                    xP1 = xP2;
+                    yP1 = yP2;
+                    xP2 = -1.5 * metersPerTile;
+                    yP2 = -0.5 * metersPerTile;
+
+                    Motion.setPower(0.4);
                     Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                    Motion.headTowardInches(24, 0);
+                    Motion.headTowardTiles(-1.5, -0.5);
                     state = State.STATE_TURN1;
                 }
                 break;
 
             case STATE_TURN1:
                 if (Motion.finished()) {
-                    Motion.moveInches(Motion.distanceToInches(24,0)-9);
+                    Motion.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    Motion.setPower(0.65);
+                    // Motion.moveInches(Motion.distanceToInches(24,0)-9);
                     state= State.STATE_MOVE1;
                 }
                 break;
 
             case STATE_MOVE1:
+                if (pursuit()) {
+                    state = State.STATE_END;
+                }
+                /*
                 if (Motion.finished()){
                     Motion.moveInches(-Motion.distanceToInches(36,-12));
                     state= State.STATE_TURN2;
                 }
+                */
                 break;
             case STATE_TURN2:
                 if (Motion.finished()){
@@ -309,29 +305,4 @@ public class AutoPursuit extends OpMode {
         // turn off tracking
         vision.targets.deactivate();
     }
-
-    /**
-     * Set the robot pose based on alliance and starting position
-     */
-    public void setPose() {
-        double robotBackDistance = 7.75;
-        double dx = 36.0;
-        double fy = 72.0 - robotBackDistance;
-
-        if (startPos == StartPos.LEFT) {
-            if (alliance == Alliance.RED) {
-                Motion.setPoseInches(-dx, -fy, 90.0);
-            } else {
-                Motion.setPoseInches(+dx, +fy, -90.0);
-            }
-        } else {
-            // starting position is RIGHT
-            if (alliance == Alliance.RED) {
-                Motion.setPoseInches(+dx, -fy, +90.0);
-            } else {
-                Motion.setPoseInches(-dx, +fy, -90.0);
-            }
-        }
-    }
-
 }

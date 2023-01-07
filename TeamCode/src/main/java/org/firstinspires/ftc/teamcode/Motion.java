@@ -133,6 +133,10 @@ public class Motion {
     static double yPoseInches = 0.0;
     static double thetaPoseDegrees = 0.0;
 
+    /** Width of a floor tile */
+    static final double metersPerTile = 23.625 * 0.0254;
+
+
     // motors used to drive the differential robot
     static private DcMotorEx dcmotorLeft;
     static private DcMotorEx dcmotorRight;
@@ -368,6 +372,16 @@ public class Motion {
         // set the velocity for each motor
         dcmotorLeft.setVelocity(velocityLeft);
         dcmotorRight.setVelocity(velocityRight);
+    }
+
+    /**
+     * Yuk. Want to zero the integration term in the PID controller.
+     */
+    static void resetPID() {
+        dcmotorLeft.setMotorDisable();
+        dcmotorRight.setMotorDisable();
+        dcmotorLeft.setMotorEnable();
+        dcmotorRight.setMotorEnable();
     }
 
     /**
@@ -691,6 +705,10 @@ public class Motion {
         moveMotorsMeters(inLeft * 0.0254, inRight * 0.0254);
     }
 
+    static void moveMotorsTiles(double tileLeft, double tileRight) {
+        moveMotorsMeters(tileLeft * metersPerTile, tileRight * metersPerTile);
+    }
+
     /**
      * Move straight ahead a particular distance.
      * Commands the motors to move.
@@ -708,6 +726,10 @@ public class Motion {
     static void moveInches(double in) {
         // convert inches to meters and call moveMeters()
         moveMeters(in * 0.0254);
+    }
+
+    static void moveTiles(double tile) {
+        moveMeters(tile * metersPerTile);
     }
 
     /**
@@ -747,6 +769,13 @@ public class Motion {
         return Math.atan2(inchDY, inchDX);
     }
 
+    static double headingTiles(double x, double y) {
+        double mDX = x * metersPerTile - xPose;
+        double mDY = y * metersPerTile - yPose;
+
+        return Math.atan2(mDY, mDX);
+    }
+
     /**
      * Point the robot to the position (x, y) in inches.
      * Commands the motors to move.
@@ -756,6 +785,20 @@ public class Motion {
     static void headTowardInches(double x, double y) {
         // get the heading
         double heading = headingInches(x, y);
+        // calculate the relative turn
+        double radianTurn = AngleUnit.normalizeRadians(heading - thetaPose);
+
+        // AngleUnit does not specify how the value is normalized!
+        // Make sure it is a -PI to PI range
+        if (radianTurn > Math.PI) radianTurn = radianTurn - 2 * Math.PI;
+
+        // execute the turn
+        turnRadians(radianTurn);
+    }
+
+    static void headTowardTiles(double x, double y) {
+        // get the heading
+        double heading = headingTiles(x, y);
         // calculate the relative turn
         double radianTurn = AngleUnit.normalizeRadians(heading - thetaPose);
 

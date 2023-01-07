@@ -39,15 +39,6 @@ public class AutoStraight extends OpMode {
     /** the LynxModule serial number */
     String strSerialNumber;
 
-    /** We can be on the BLUE or the RED alliance */
-    enum Alliance {BLUE, RED}
-    /** Our current alliance */
-    Alliance alliance = Alliance.RED;
-
-    /** We can start in the left or the right position */
-    enum StartPos {LEFT, RIGHT}
-    /** assume we start in the right position */
-    StartPos startPos = StartPos.RIGHT;
     enum State {
         STATE_START,
         STATE_TURN1,
@@ -100,7 +91,7 @@ public class AutoStraight extends OpMode {
         Motion.init(hardwareMap);
 
         // set the initial position
-        setPose();
+        PowerPlay.init();
     }
 
     @Override
@@ -119,25 +110,8 @@ public class AutoStraight extends OpMode {
         vision.readSignal();
         telemetry.addData("Signal", vision.signal);
 
-        // set the alliance
-        if (gamepad1.x) {
-            alliance = Alliance.BLUE;
-            setPose();
-        }
-        if (gamepad1.b) {
-            alliance = Alliance.RED;
-            setPose();
-        }
-
-        // set the starting position
-        if (gamepad1.dpad_left) {
-            startPos = StartPos.LEFT;
-            setPose();
-        }
-        if (gamepad1.dpad_right) {
-            startPos = StartPos.RIGHT;
-            setPose();
-        }
+        // set the alliance and start position
+        PowerPlay.init_loop(gamepad1);
     }
 
     @Override
@@ -156,11 +130,12 @@ public class AutoStraight extends OpMode {
         }
 
         // run using position
-        Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        // Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        Motion.setPower(0.65);
+        // Motion.setPower(0.65);
 
         Motion.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        Motion.setPower(0.65);
 
 
         Motion.setVelocity(600,600);
@@ -201,7 +176,9 @@ public class AutoStraight extends OpMode {
                     Motion.setVelocity(0,0);
 
                     Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    Motion.setPower(0.4);
 
+                    // This is the junction
                     Motion.headTowardInches(24, 0);
 
                     state= State.STATE_TURN1;
@@ -216,6 +193,8 @@ public class AutoStraight extends OpMode {
 
             case STATE_TURN1:
                 if (Motion.finished()) {
+                    // finished turning.
+                    // move distance to junction less a bit for the robot.
                     Motion.moveInches(Motion.distanceToInches(24,0)-9);
                     state= State.STATE_MOVE1;
                 }
@@ -223,6 +202,7 @@ public class AutoStraight extends OpMode {
 
             case STATE_MOVE1:
                 if (Motion.finished()){
+                    // really want to back up until y is -12.
                     Motion.moveInches(-Motion.distanceToInches(36,-12));
                     state= State.STATE_TURN2;
                 }
@@ -296,29 +276,4 @@ public class AutoStraight extends OpMode {
         // turn off tracking
         vision.targets.deactivate();
     }
-
-    /**
-     * Set the robot pose based on alliance and starting position
-     */
-    public void setPose() {
-        double robotBackDistance = 7.75;
-        double dx = 36.0;
-        double fy = 72.0 - robotBackDistance;
-
-        if (startPos == StartPos.LEFT) {
-            if (alliance == Alliance.RED) {
-                Motion.setPoseInches(-dx, -fy, 90.0);
-            } else {
-                Motion.setPoseInches(+dx, +fy, -90.0);
-            }
-        } else {
-            // starting position is RIGHT
-            if (alliance == Alliance.RED) {
-                Motion.setPoseInches(+dx, -fy, +90.0);
-            } else {
-                Motion.setPoseInches(-dx, +fy, -90.0);
-            }
-        }
-    }
-
 }

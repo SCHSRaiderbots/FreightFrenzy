@@ -43,6 +43,9 @@ import java.util.Locale;
 @TeleOp(name="Vuforia Field Nav", group ="CodeDev")
 public class VisionTest extends OpMode {
 
+    // the Elevator
+    Elevator elevator;
+
     // the Vision object
     Vision vision;
 
@@ -67,6 +70,9 @@ public class VisionTest extends OpMode {
 
         // report the LynxModules
         LogDevice.dumpFirmware(hardwareMap);
+
+        // create the eleator
+        elevator = new Elevator(hardwareMap);
 
         // create the vision object
         vision = new Vision();
@@ -172,10 +178,24 @@ public class VisionTest extends OpMode {
         double turn = 0.4 * gamepad1.right_stick_x;
 
         Motion.setPower(forw+turn, forw-turn);
+
+        // move the elevator
+        double p = gamepad1.left_trigger - gamepad1.right_trigger;
+        // elevator.setPower(p);
+
+        if (gamepad1.a) {
+            elevator.setTargetPosition(5.0);
+        }
+        if (gamepad1.b) {
+            elevator.setTargetPosition(10.0);
+        }
     }
 
     @Override
     public void stop() {
+        // turn off the elevator
+        elevator.stop();
+
         // turn off tracking
         vision.targets.deactivate();
     }

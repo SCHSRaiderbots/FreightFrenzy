@@ -38,15 +38,6 @@ public class AutoPark extends OpMode {
     /** the LynxModule serial number */
     String strSerialNumber;
 
-    /** We can be on the BLUE or the RED alliance */
-    enum Alliance {BLUE, RED}
-    /** Our current alliance */
-    Alliance alliance = Alliance.RED;
-
-    /** We can start in the left or the right position */
-    enum StartPos {LEFT, RIGHT}
-    /** assume we start in the right position */
-    StartPos startPos = StartPos.RIGHT;
     enum State {
         STATE_START,
         STATE_TURN1,
@@ -99,7 +90,7 @@ public class AutoPark extends OpMode {
         Motion.init(hardwareMap);
 
         // set the initial position
-        setPose();
+        PowerPlay.init();
     }
 
     @Override
@@ -118,25 +109,8 @@ public class AutoPark extends OpMode {
         vision.readSignal();
         telemetry.addData("Signal", vision.signal);
 
-        // set the alliance
-        if (gamepad1.x) {
-            alliance = Alliance.BLUE;
-            setPose();
-        }
-        if (gamepad1.b) {
-            alliance = Alliance.RED;
-            setPose();
-        }
-
-        // set the starting position
-        if (gamepad1.dpad_left) {
-            startPos = StartPos.LEFT;
-            setPose();
-        }
-        if (gamepad1.dpad_right) {
-            startPos = StartPos.RIGHT;
-            setPose();
-        }
+        // set the alliance and start position
+        PowerPlay.init_loop(gamepad1);
     }
 
     @Override
@@ -273,29 +247,4 @@ public class AutoPark extends OpMode {
         // turn off tracking
         vision.targets.deactivate();
     }
-
-    /**
-     * Set the robot pose based on alliance and starting position
-     */
-    public void setPose() {
-        double robotBackDistance = 7.75;
-        double dx = 36.0;
-        double fy = 72.0 - robotBackDistance;
-
-        if (startPos == StartPos.LEFT) {
-            if (alliance == Alliance.RED) {
-                Motion.setPoseInches(-dx, -fy, 90.0);
-            } else {
-                Motion.setPoseInches(+dx, +fy, -90.0);
-            }
-        } else {
-            // starting position is RIGHT
-            if (alliance == Alliance.RED) {
-                Motion.setPoseInches(+dx, -fy, +90.0);
-            } else {
-                Motion.setPoseInches(-dx, +fy, -90.0);
-            }
-        }
-    }
-
 }
