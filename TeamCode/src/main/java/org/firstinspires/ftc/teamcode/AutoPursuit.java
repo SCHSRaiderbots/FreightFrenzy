@@ -115,8 +115,8 @@ public class AutoPursuit extends OpMode {
         vision.readSignal();
         telemetry.addData("Signal", vision.signal);
 
-        PowerPlay.init_loop(gamepad1);
-
+        // update game configuration
+        PowerPlay.init_loop(telemetry, gamepad1);
     }
 
     @Override
@@ -212,21 +212,26 @@ public class AutoPursuit extends OpMode {
             case STATE_START:
                 if (pursuit()) {
 
+                    // make the starting position the previous end position
                     xP1 = xP2;
                     yP1 = yP2;
+                    // set new end position
                     xP2 = -1.5 * metersPerTile;
                     yP2 = -0.5 * metersPerTile;
 
                     Motion.setPower(0.4);
                     Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
+                    // execute a left turn
                     Motion.headTowardTiles(-1.5, -0.5);
                     state = State.STATE_TURN1;
                 }
                 break;
 
             case STATE_TURN1:
+                // is the turn finished?
                 if (Motion.finished()) {
+                    // go to pursuit mode
                     Motion.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     Motion.setPower(0.65);
                     // Motion.moveInches(Motion.distanceToInches(24,0)-9);
@@ -235,8 +240,21 @@ public class AutoPursuit extends OpMode {
                 break;
 
             case STATE_MOVE1:
+                // are we finished moving?
                 if (pursuit()) {
-                    state = State.STATE_END;
+                    // make the starting position the previous end position
+                    xP1 = xP2;
+                    yP1 = yP2;
+                    // set new end position
+                    xP2 = -1.5 * metersPerTile;
+                    yP2 = +0.5 * metersPerTile;
+
+                    Motion.setPower(0.4);
+                    Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                    // execute a right turn
+                    Motion.headTowardTiles(-1.5, 0.5);
+                    state = State.STATE_TURN2;
                 }
                 /*
                 if (Motion.finished()){
@@ -247,44 +265,88 @@ public class AutoPursuit extends OpMode {
                 break;
             case STATE_TURN2:
                 if (Motion.finished()){
-                    Motion.headTowardInches(72, -12);
+                    // go to pursuit mode
+                    Motion.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    Motion.setPower(0.65);
                     state = State.STATE_MOVE2;
                 }
                 break;
             case STATE_MOVE2:
-                if (Motion.finished()){
-                    Motion.moveInches(Motion.distanceToInches(60,-12));
-                    state=State.STATE_MOVE3;
-                }
-                break;
-            case STATE_MOVE3:
-                if (Motion.finished()){
-                    Motion.moveInches(-Motion.distanceToInches(12,-12));
-                    state= State.STATE_TURN3;
+                if (pursuit()){
+                    // make the starting position the previous end position
+                    xP1 = xP2;
+                    yP1 = yP2;
+                    // set new end position
+                    xP2 = 1.5 * metersPerTile;
+                    yP2 = +0.5 * metersPerTile;
+
+                    Motion.setPower(0.4);
+                    Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                    // execute a right turn
+                    Motion.headTowardTiles(1.5, 0.5);
+                    state=State.STATE_TURN3;
                 }
                 break;
             case STATE_TURN3:
+                // is the turn finished?
                 if (Motion.finished()){
-                    Motion.headTowardInches(0, -24);
-                    state = State.STATE_MOVE4;
+                    // go to pursuit mode
+                    Motion.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    Motion.setPower(0.65);
+
+                    state = State.STATE_MOVE3;
                 }
                 break;
-            case STATE_MOVE4:
-                if (Motion.finished()){
-                    Motion.moveInches(Motion.distanceToInches(0,-24)-9);
-                    state= State.STATE_MOVE5;
-                }
-                break;
-            case STATE_MOVE5:
-                if (Motion.finished()){
-                    Motion.moveInches(-Motion.distanceToInches(0,-24));
+            case STATE_MOVE3:
+                if (pursuit()){
+                    // make the starting position the previous end position
+                    xP1 = xP2;
+                    yP1 = yP2;
+                    // set new end position
+                    xP2 = 1.5 * metersPerTile;
+                    yP2 = -0.5 * metersPerTile;
+
+                    Motion.setPower(0.4);
+                    Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                    // execute a right turn
+                    Motion.headTowardTiles(1.5, -0.5);
                     state= State.STATE_TURN4;
                 }
                 break;
             case STATE_TURN4:
                 if (Motion.finished()){
-                    Motion.headTowardInches(72, -12);
-                    state = State.STATE_MOVE6;
+                    // go to pursuit mode
+                    Motion.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    Motion.setPower(0.65);
+
+                    state = State.STATE_MOVE4;
+                }
+            case STATE_MOVE4:
+                if (pursuit()){
+                    // make the starting position the previous end position
+                    xP1 = xP2;
+                    yP1 = yP2;
+                    // set new end position
+                    xP2 = -1.5 * metersPerTile;
+                    yP2 = -0.5 * metersPerTile;
+
+                    Motion.setPower(0.4);
+                    Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                    // execute a right turn
+                    Motion.headTowardTiles(-1.5, -0.5);
+                    state= State.STATE_MOVE5;
+                }
+                break;
+            case STATE_MOVE5:
+                if (Motion.finished()){
+                    // go to pursuit mode
+                    Motion.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    Motion.setPower(0.65);
+                    // run in a loop
+                    state= State.STATE_TURN2;
                 }
                 break;
             case STATE_MOVE6:
@@ -293,10 +355,9 @@ public class AutoPursuit extends OpMode {
                     state= State.STATE_END;
                 }
                 break;
+
             case STATE_END:
                 break;
-
-
         }
     }
 

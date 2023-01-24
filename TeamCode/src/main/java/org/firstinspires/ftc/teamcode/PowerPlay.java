@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 /**
  * Class to manage some aspects of the PowerPlay game.
  */
@@ -25,7 +27,7 @@ public class PowerPlay {
      * Obtains configuration information from the gamepad
      * @param gamepad1
      */
-    public static void init_loop(Gamepad gamepad1) {
+    public static void init_loop(Telemetry telemetry, Gamepad gamepad1) {
         // set the alliance
         if (gamepad1.x) {
             alliance = Alliance.BLUE;
@@ -46,6 +48,9 @@ public class PowerPlay {
             setPose();
         }
 
+        // possibly change starting conditions
+        telemetry.addData("alliance: x (Blue) or b (Red)", alliance);
+        telemetry.addData("startPos: dpad left or right", startPos);
     }
 
 

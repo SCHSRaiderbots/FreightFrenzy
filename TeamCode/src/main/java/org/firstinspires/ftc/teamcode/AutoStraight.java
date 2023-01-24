@@ -9,29 +9,13 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import android.util.Log;
 
-/**
- * This OpMode illustrates using the Vuforia localizer to determine positioning and orientation of
- * robot on the FTC field using a WEBCAM.  The code is structured as a LinearOpMode
- *
- * NOTE: If you are running on a Phone with a built-in camera, use the ConceptVuforiaFieldNavigation example instead of this one.
- * NOTE: It is possible to switch between multiple WebCams (eg: one for the left side and one for the right).
- *       For a related example of how to do this, see ConceptTensorFlowObjectDetectionSwitchableCameras
- *
- * When images are located, Vuforia is able to determine the position and orientation of the
- * image relative to the camera.  This sample code then combines that information with a
- * knowledge of where the target images are on the field, to determine the location of the camera.
- *
- * Finally, the location of the camera on the robot is used to determine the
- * robot's location and orientation on the field.
- *
- * To learn more about the FTC field coordinate model, see FTC_FieldCoordinateSystemDefinition.pdf in this folder
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list.
- */
-
 @Autonomous(name="Auto Straight", group ="CodeDev")
 public class AutoStraight extends OpMode {
+    // the elevator
+    Elevator elevator;
+
+    // the gripper
+    Gripper gripper;
 
     // the Vision object
     Vision vision;
@@ -57,10 +41,26 @@ public class AutoStraight extends OpMode {
     }
     State state= State.STATE_START;
 
-
-
     @Override
     public void init() {
+        // set the robot
+        // Motion.identifyRobot(hardwareMap);
+        robot = Motion.Robot.ROBOT_2022;
+
+        // initialize motion
+        Motion.init(hardwareMap);
+
+        // set the initial position
+        PowerPlay.init();
+
+        // the elevator
+        elevator = new Elevator(hardwareMap);
+
+        // the gripper
+        gripper = new Gripper(hardwareMap);
+        // make sure the gripper is open
+        gripper.grip(Gripper.GripState.GRIP_OPEN);
+
         // create the vision object
         vision = new Vision();
 
@@ -85,13 +85,6 @@ public class AutoStraight extends OpMode {
             // vision.tfod.setZoom(1.25, 16.0 / 9.0);
         }
 
-        // initialize motion
-        // Motion.identifyRobot(hardwareMap);
-        robot = Motion.Robot.ROBOT_2022;
-        Motion.init(hardwareMap);
-
-        // set the initial position
-        PowerPlay.init();
     }
 
     @Override
@@ -111,7 +104,7 @@ public class AutoStraight extends OpMode {
         telemetry.addData("Signal", vision.signal);
 
         // set the alliance and start position
-        PowerPlay.init_loop(gamepad1);
+        PowerPlay.init_loop(telemetry, gamepad1);
     }
 
     @Override
@@ -129,6 +122,9 @@ public class AutoStraight extends OpMode {
             vision.targets.activate();
         }
 
+        // close the gripper
+        gripper.grip(Gripper.GripState.GRIP_CLOSED);
+
         // run using position
         // Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
@@ -137,12 +133,9 @@ public class AutoStraight extends OpMode {
         Motion.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         Motion.setPower(0.65);
 
-
         Motion.setVelocity(600,600);
 
         state=State.STATE_START;
-
-
     }
 
     @Override
@@ -162,16 +155,18 @@ public class AutoStraight extends OpMode {
         }
 
         // do some driving
-        double forward = -0.7 * gamepad1.left_stick_y;
-        double turn = 0.4 * gamepad1.right_stick_x;
+        // double forward = -0.7 * gamepad1.left_stick_y;
+        // double turn = 0.4 * gamepad1.right_stick_x;
 
         switch (state) {
             case STATE_START:
             {
+                // distance to target y position
                 double dist = Motion.yPoseInches - -12.0;
 
                 telemetry.addData("dist", dist);
 
+                // positive distance means we got there....
                 if (dist > 0.0) {
                     Motion.setVelocity(0,0);
 
@@ -184,6 +179,12 @@ public class AutoStraight extends OpMode {
                     state= State.STATE_TURN1;
                 }
             }
+
+                // check if the gripper is now closed...
+                if (gripper.finished()) {
+                    // start moving the elevator
+                    elevator.setTargetPosition(10.0);
+                }
 
                 if (Motion.finished()){
                     // Motion.headTowardInches(24, 0);

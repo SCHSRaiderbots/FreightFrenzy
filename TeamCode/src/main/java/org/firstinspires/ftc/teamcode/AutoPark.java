@@ -110,7 +110,7 @@ public class AutoPark extends OpMode {
         telemetry.addData("Signal", vision.signal);
 
         // set the alliance and start position
-        PowerPlay.init_loop(gamepad1);
+        PowerPlay.init_loop(telemetry, gamepad1);
     }
 
     @Override

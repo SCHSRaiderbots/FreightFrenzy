@@ -10,14 +10,14 @@ public class Elevator {
     /**
      * Diameter of the capstan in inches
      */
-    private static final double diameterCapstan = 1.0;
+    private static final double diameterCapstan = 1.3;
 
     /**
      * Convert inches to ticks.
      * One rotation of the capstan is pi * D.
      * Which is also 288 ticks of a CoreHex motor.
      */
-    private static final double ticksPerInch = 288.0 * (Math.PI * diameterCapstan);
+    private static final double ticksPerInch = 288.0 / (Math.PI * diameterCapstan);
 
     /** create an Elevator */
     public Elevator (HardwareMap hardwareMap) {
@@ -26,9 +26,18 @@ public class Elevator {
         // make sure the motor does not move
         setPower(0.0);
 
-        setTargetPosition(5.0);
-        setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        setPower(0.3);
+        // reset the encoder (should use a limit switch)
+        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        // set the desired position
+        setTargetPosition(0.0);
+
+        // setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // running to position overruns at power level 1...
+        // TODO: should set some reasonable PID coefficients
+        setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        setPower(1.0);
     }
 
     /**
@@ -48,6 +57,7 @@ public class Elevator {
      * @param mode
      */
     public void setMode(DcMotor.RunMode mode) {
+        // set the motor mode
         motorElevator.setMode(mode);
     }
 
@@ -61,10 +71,50 @@ public class Elevator {
         motorElevator.setTargetPosition(ticks);
     }
 
+    public enum TargetPosition {
+        /** position on the floor for picking up cones */
+        FLOOR(0.0),
+        /** ground junctions are 0.625 high */
+        GROUND( 2.0),
+        /** low junction is 13.5 inches */
+        LOW (16.0),
+        /** medium junction is 23.5 inches */
+        MEDIUM(26.0),
+        /** high junction is 33.5 inches */
+        HIGH(36.0);
+
+        final double height;
+
+        /**
+         * Set a named position height
+         * @param h
+         */
+        TargetPosition(double h) {
+            this.height = h;
+        }
+    }
+
+    /**
+     * Overloaded setTargetPosition uses enum
+     * @param target
+     */
+    public void setTargetPosition(TargetPosition target) {
+        setTargetPosition(target.height);
+    }
+
+    /**
+     *
+     * @return inches
+     */
     public double getTargetPosition() {
+        // get the motor's target position
         int ticks = motorElevator.getTargetPosition();
 
         return ticks / ticksPerInch;
+    }
+
+    public double getCurrentPosition() {
+        return motorElevator.getCurrentPosition() / ticksPerInch;
     }
 
     public void stop() {

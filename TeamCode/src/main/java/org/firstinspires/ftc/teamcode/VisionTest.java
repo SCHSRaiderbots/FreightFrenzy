@@ -45,6 +45,7 @@ public class VisionTest extends OpMode {
 
     // the Elevator
     Elevator elevator;
+    Gripper gripper;
 
     // the Vision object
     Vision vision;
@@ -73,6 +74,7 @@ public class VisionTest extends OpMode {
 
         // create the eleator
         elevator = new Elevator(hardwareMap);
+        gripper= new Gripper(hardwareMap);
 
         // create the vision object
         vision = new Vision();
@@ -165,6 +167,9 @@ public class VisionTest extends OpMode {
 
         telemetry.addData("Robot", robot);
 
+        telemetry.addData("elevator", elevator.getTargetPosition());
+        telemetry.addData("current", elevator.getCurrentPosition());
+
         // report targets in view
         vision.reportTracking(telemetry);
 
@@ -174,8 +179,8 @@ public class VisionTest extends OpMode {
         }
 
         // do some driving
-        double forw = -0.7 * gamepad1.left_stick_y;
-        double turn = 0.4 * gamepad1.right_stick_x;
+        double forw = -0.7 * boost(gamepad1.left_stick_y);
+        double turn = 0.4 * (gamepad1.right_stick_x);
 
         Motion.setPower(forw+turn, forw-turn);
 
@@ -184,11 +189,42 @@ public class VisionTest extends OpMode {
         // elevator.setPower(p);
 
         if (gamepad1.a) {
-            elevator.setTargetPosition(5.0);
+            elevator.setTargetPosition(Elevator.TargetPosition.FLOOR);
         }
         if (gamepad1.b) {
             elevator.setTargetPosition(10.0);
         }
+        if (gamepad1.dpad_down) {
+            elevator.setTargetPosition(Elevator.TargetPosition.GROUND);
+        }
+        if (gamepad1.dpad_left) {
+            elevator.setTargetPosition(Elevator.TargetPosition.LOW);
+        }
+        if (gamepad1.dpad_right) {
+            elevator.setTargetPosition(Elevator.TargetPosition.MEDIUM);
+        }
+        if (gamepad1.dpad_up) {
+            elevator.setTargetPosition(Elevator.TargetPosition.HIGH);
+        }
+
+        // left bumper opens the grip
+        if (gamepad1.left_bumper){
+            gripper.grip(true);
+        }
+
+        // right bumper closes
+        if (gamepad1.right_bumper){
+            gripper.grip(false);
+        }
+    }
+
+    /**
+     * Square a value retaining the sign
+     * @param x
+     * @return x * abs(x)
+     */
+    private double boost(double x) {
+        return x * Math.abs(x);
     }
 
     @Override
