@@ -149,11 +149,6 @@ public class AutoStraight extends OpMode {
 
         telemetry.addData("State", state.toString());
 
-        if (gamepad1.y) {
-            // set the pose
-            Motion.setPoseInches(Vision.inchX, Vision.inchY, Vision.degTheta);
-        }
-
         // do some driving
         // double forward = -0.7 * gamepad1.left_stick_y;
         // double turn = 0.4 * gamepad1.right_stick_x;

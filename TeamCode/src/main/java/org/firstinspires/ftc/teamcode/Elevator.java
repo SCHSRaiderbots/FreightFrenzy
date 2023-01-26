@@ -10,7 +10,7 @@ public class Elevator {
     /**
      * Diameter of the capstan in inches
      */
-    private static final double diameterCapstan = 1.3;
+    private static final double diameterCapstan = 1.4;
 
     /**
      * Convert inches to ticks.
@@ -26,6 +26,7 @@ public class Elevator {
         // make sure the motor does not move
         setPower(0.0);
 
+        // TODO: only reset on Autonomous Routine
         // reset the encoder (should use a limit switch)
         setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -115,6 +116,10 @@ public class Elevator {
 
     public double getCurrentPosition() {
         return motorElevator.getCurrentPosition() / ticksPerInch;
+    }
+
+    public boolean finished() {
+        return !motorElevator.isBusy();
     }
 
     public void stop() {

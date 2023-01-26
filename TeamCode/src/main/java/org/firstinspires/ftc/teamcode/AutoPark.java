@@ -34,7 +34,11 @@ public class AutoPark extends OpMode {
 
     // the Vision object
     Vision vision;
+    // the elevator
+    Elevator elevator;
 
+    // the gripper
+    Gripper gripper;
     /** the LynxModule serial number */
     String strSerialNumber;
 
@@ -43,6 +47,7 @@ public class AutoPark extends OpMode {
         STATE_TURN1,
         STATE_MOVE1,
         STATE_BACK,
+        STATE_DROP,
         STATE_TURN2,
         STATE_MOVE2,
         STATE_TURN3,
@@ -63,6 +68,8 @@ public class AutoPark extends OpMode {
         // create the vision object
         vision = new Vision();
 
+        elevator = new Elevator(hardwareMap);
+
         // init the Vuforia localization engine
         vision.initVuforia(hardwareMap);
 
@@ -71,6 +78,10 @@ public class AutoPark extends OpMode {
 
         // build an object detector
         vision.initTfod(hardwareMap);
+        // the gripper
+        gripper = new Gripper(hardwareMap);
+        // make sure the gripper is open
+        gripper.grip(Gripper.GripState.GRIP_OPEN);
 
         // if we have an object detector, then activate it
         if (vision.tfod != null) {
@@ -134,7 +145,7 @@ public class AutoPark extends OpMode {
         Motion.setPower(0.65);
 
         Motion.moveInches(51);
-
+        gripper.grip(Gripper.GripState.GRIP_CLOSED);
 
 
     }
@@ -159,21 +170,33 @@ public class AutoPark extends OpMode {
 
         switch (state) {
             case STATE_START:
+                if (gripper.finished()){
+                    elevator.setTargetPosition(10.0);
+                }
                 if (Motion.finished()){
                     Motion.headTowardInches(24, 0);
+                    elevator.setTargetPosition(35);
                     state = State.STATE_TURN1;
                 }
                 break;
 
             case STATE_TURN1:
-                if (Motion.finished()) {
-                    Motion.moveInches(Motion.distanceToInches(24,0)-9);
-                    state= State.STATE_MOVE1;
+                if (Motion.finished() && elevator.finished() && gamepad1.y) {
+                    // Motion.moveInches(Motion.distanceToInches(24,0));
+                    Motion.moveInches(3.0);
+
+                    state= State.STATE_DROP;
                 }
                 break;
 
+            case STATE_DROP:
+                if (Motion.finished() && gamepad1.b){
+                    gripper.grip(Gripper.GripState.GRIP_OPEN);
+                    state= State.STATE_MOVE1;
+                }
+
             case STATE_MOVE1:
-                if (Motion.finished()){
+                if (gripper.finished()){
                     Motion.moveInches(-Motion.distanceToInches(36,-12));
                     state= State.STATE_TURN2;
                 }
