@@ -307,9 +307,9 @@ public class Vision {
         // this assumes the camera location is fixed on the robot.
         // assume directed on the x-axis with displacements from center of rotation
         //   the displacement will be different for each robot
-        final float CAMERA_FORWARD_DISPLACEMENT = 6.5f * mmPerInch;   // eg: Enter the forward distance from the center of the robot to the camera lens
+        final float CAMERA_FORWARD_DISPLACEMENT = 7.0f * mmPerInch;   // eg: Enter the forward distance from the center of the robot to the camera lens
         final float CAMERA_VERTICAL_DISPLACEMENT = 4.0f * mmPerInch;   // eg: Camera is 6 Inches above ground
-        final float CAMERA_LEFT_DISPLACEMENT = -0.6f * mmPerInch;   // eg: Enter the left distance from the center of the robot to the camera lens
+        final float CAMERA_LEFT_DISPLACEMENT = 5.0f * mmPerInch;   // eg: Enter the left distance from the center of the robot to the camera lens
         // in addition to the displacement, we need to orient the camera
         // The camera produces x, y values, but we need to shift those coordinates to be looking down the x-axis
         //   I'm confused by this transform

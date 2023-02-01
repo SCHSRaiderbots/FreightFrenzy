@@ -152,6 +152,9 @@ public class AutoPark extends OpMode {
 
     @Override
     public void loop() {
+        // report the state
+        telemetry.addData("state", state);
+
         // update the robot pose
         Motion.updateRobotPose();
         Motion.reportPosition(telemetry);
@@ -164,43 +167,57 @@ public class AutoPark extends OpMode {
             Motion.setPoseInches(Vision.inchX, Vision.inchY, Vision.degTheta);
         }
 
-        // do some driving
-        double forward = -0.7 * gamepad1.left_stick_y;
-        double turn = 0.4 * gamepad1.right_stick_x;
-
+        // dispatch on state
         switch (state) {
             case STATE_START:
+                // wait for the gripper to close
                 if (gripper.finished()){
+                    // and then start raising the elevator
                     elevator.setTargetPosition(10.0);
                 }
+                // have we finished moving?
                 if (Motion.finished()){
+                    // then start heading toward the high junction
                     Motion.headTowardInches(24, 0);
+                    // and start raising the elevator
                     elevator.setTargetPosition(35);
                     state = State.STATE_TURN1;
                 }
                 break;
 
             case STATE_TURN1:
-                if (Motion.finished() && elevator.finished() && gamepad1.y) {
-                    // Motion.moveInches(Motion.distanceToInches(24,0));
-                    Motion.moveInches(3.0);
+                // we are turning toward the junction and raising the elevator
+                if (Motion.finished() && elevator.finished()) {
+                    // Move to center cone over the junction
+                    Motion.moveInches(Motion.distanceToInches(24,0)-10.5);
 
-                    state= State.STATE_DROP;
+                    state = State.STATE_DROP;
                 }
                 break;
 
             case STATE_DROP:
-                if (Motion.finished() && gamepad1.b){
+                // when we get to the  junction
+                if (Motion.finished()){
+                    // open the gripper
                     gripper.grip(Gripper.GripState.GRIP_OPEN);
-                    state= State.STATE_MOVE1;
-                }
 
-            case STATE_MOVE1:
-                if (gripper.finished()){
-                    Motion.moveInches(-Motion.distanceToInches(36,-12));
-                    state= State.STATE_TURN2;
+                    // and drop the elevator
+                    elevator.setTargetPosition(Elevator.TargetPosition.FLOOR);
+                    state = State.STATE_MOVE1;
                 }
                 break;
+
+            case STATE_MOVE1:
+                // wait for the gripper to open
+                if (gripper.finished()){
+                    // and then back up
+                    Motion.moveInches(-Motion.distanceToInches(36,-12));
+                    state= State.STATE_TURN2;
+
+                    state= State.STATE_END;
+                }
+                break;
+
             case STATE_TURN2:
                 if (Motion.finished()){
                     Motion.headTowardInches(72, -12);

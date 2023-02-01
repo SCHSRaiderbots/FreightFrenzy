@@ -20,31 +20,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import java.util.Locale;
 
 /**
- * This OpMode illustrates using the Vuforia localizer to determine positioning and orientation of
- * robot on the FTC field using a WEBCAM.  The code is structured as a LinearOpMode
- *
- * NOTE: If you are running on a Phone with a built-in camera, use the ConceptVuforiaFieldNavigation example instead of this one.
- * NOTE: It is possible to switch between multiple WebCams (eg: one for the left side and one for the right).
- *       For a related example of how to do this, see ConceptTensorFlowObjectDetectionSwitchableCameras
- *
- * When images are located, Vuforia is able to determine the position and orientation of the
- * image relative to the camera.  This sample code then combines that information with a
- * knowledge of where the target images are on the field, to determine the location of the camera.
- *
- * Finally, the location of the camera on the robot is used to determine the
- * robot's location and orientation on the field.
- *
- * To learn more about the FTC field coordinate model, see FTC_FieldCoordinateSystemDefinition.pdf in this folder
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list.
+ * TeleOp mode for competition.
  */
-
-@TeleOp(name="Vuforia Field Nav", group ="CodeDev")
-public class VisionTest extends OpMode {
+@TeleOp(name="Teleop Drive", group ="Competition")
+public class TeleOpDrive extends OpMode {
 
     // the Elevator
     Elevator elevator;
+    double heightElevator = 0.0;
+
     Gripper gripper;
 
     // the Vision object
@@ -74,6 +58,7 @@ public class VisionTest extends OpMode {
 
         // create the elevator
         elevator = new Elevator(hardwareMap);
+        // create the gripper
         gripper= new Gripper(hardwareMap);
 
         // create the vision object
@@ -86,19 +71,15 @@ public class VisionTest extends OpMode {
         // TODO: does not play well with others...
         vision.initTracking();
 
+        // we do not need an object detector...
         // build an object detector
         vision.initTfod(hardwareMap);
 
-        // if we have an object detector, then activate it
-        if (vision.tfod != null) {
-            vision.tfod.activate();
-            // The TensorFlow software will scale the input images from the camera to a lower resolution.
-            // This can result in lower detection accuracy at longer distances (> 55cm or 22").
-            // If your target is at distance greater than 50 cm (20") you can adjust the magnification value
-            // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
-            // should be set to the value of the images used to create the TensorFlow Object Detection model
-            // (typically 16/9).
-            // vision.tfod.setZoom(1.25, 16.0 / 9.0);
+        // we do want to start tracking
+        if (vision.targets == null) {
+            Log.d("vision.targets", "is null!");
+        } else {
+            vision.targets.activate();
         }
 
         // initialize motion
@@ -134,24 +115,17 @@ public class VisionTest extends OpMode {
         // this causes an update, so it will flash the display
         // telemetry.addData("Serial Number", strSerialNumber);
 
-        // report detected objects
-        vision.reportDetections(telemetry);
-
         // update the robot pose
         Motion.updateRobotPose();
+
+        // report targets in view
+        vision.reportTracking(telemetry);
+
     }
 
     @Override
     public void start() {
         // report current status
-        telemetry.addData("Navigation", "On");
-        vision.tfod.deactivate();
-
-        if (vision.targets == null) {
-            Log.d("vision.targets", "is null!");
-        } else {
-            vision.targets.activate();
-        }
 
         // Motion.setPoseInches(0,0,0);
 
@@ -173,10 +147,7 @@ public class VisionTest extends OpMode {
         // report targets in view
         vision.reportTracking(telemetry);
 
-        if (gamepad1.y) {
-            // set the pose
-            Motion.setPoseInches(Vision.inchX, Vision.inchY, Vision.degTheta);
-        }
+        // now process the controls...
 
         // do some driving
         double forw = -0.7 * boost(gamepad1.left_stick_y);
@@ -184,37 +155,56 @@ public class VisionTest extends OpMode {
 
         Motion.setPower(forw+turn, forw-turn);
 
-        // move the elevator
+        if (gamepad1.y) {
+            // set the pose
+            Motion.setPoseInches(Vision.inchX, Vision.inchY, Vision.degTheta);
+        }
+
+        // the elevator controls
         double p = gamepad1.left_trigger - gamepad1.right_trigger;
         // elevator.setPower(p);
 
         if (gamepad1.a) {
             elevator.setTargetPosition(Elevator.TargetPosition.FLOOR);
+            heightElevator = elevator.getTargetPosition();
         }
         if (gamepad1.b) {
             elevator.setTargetPosition(10.0);
+            heightElevator = elevator.getTargetPosition();
         }
         if (gamepad1.dpad_down) {
             elevator.setTargetPosition(Elevator.TargetPosition.GROUND);
+            heightElevator = elevator.getTargetPosition();
         }
         if (gamepad1.dpad_left) {
             elevator.setTargetPosition(Elevator.TargetPosition.LOW);
+            heightElevator = elevator.getTargetPosition();
         }
         if (gamepad1.dpad_right) {
             elevator.setTargetPosition(Elevator.TargetPosition.MEDIUM);
+            heightElevator = elevator.getTargetPosition();
         }
         if (gamepad1.dpad_up) {
             elevator.setTargetPosition(Elevator.TargetPosition.HIGH);
+            heightElevator = elevator.getTargetPosition();
         }
 
-        // left bumper opens the grip
+        // now adjust the target position
+        double delta = 5.0 * (-gamepad1.left_trigger + gamepad1.right_trigger);
+        elevator.setTargetPosition(heightElevator + delta);
+
+        // left bumper closes the grip
         if (gamepad1.left_bumper){
-            gripper.grip(true);
+            gripper.grip(Gripper.GripState.GRIP_CLOSED);
         }
 
-        // right bumper closes
+        // right bumper opens
         if (gamepad1.right_bumper){
-            gripper.grip(false);
+            gripper.grip(Gripper.GripState.GRIP_OPEN);
+
+            // if I open the gripper, send it to the groun
+            elevator.setTargetPosition(Elevator.TargetPosition.FLOOR);
+            heightElevator = elevator.getTargetPosition();
         }
     }
 
@@ -311,5 +301,4 @@ public class VisionTest extends OpMode {
     String formatDegrees(double degrees){
         return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
     }
-
 }
