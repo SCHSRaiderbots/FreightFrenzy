@@ -40,7 +40,7 @@ public class Gripper {
      */
     public void setPosition(double position) {
         m_servo.setPosition(position);
-        m_count = 20;
+        m_count = 200;
     }
 
     /**
@@ -48,7 +48,8 @@ public class Gripper {
      * @param gs
      */
     public void grip(GripState gs) {
-        m_servo.setPosition(gs.position);
+        // set the position
+        setPosition(gs.position);
     }
 
     /**
@@ -57,9 +58,9 @@ public class Gripper {
      */
     public void grip(boolean state) {
         if (state)
-            m_servo.setPosition(grip_open);
+            grip(GripState.GRIP_OPEN);
         else
-            m_servo.setPosition(grip_close);
+            grip(GripState.GRIP_CLOSED);
     }
 
     /**

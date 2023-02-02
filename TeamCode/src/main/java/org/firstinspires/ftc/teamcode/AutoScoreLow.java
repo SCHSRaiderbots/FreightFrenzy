@@ -8,29 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import android.util.Log;
 
-/**
- * This OpMode illustrates using the Vuforia localizer to determine positioning and orientation of
- * robot on the FTC field using a WEBCAM.  The code is structured as a LinearOpMode
- *
- * NOTE: If you are running on a Phone with a built-in camera, use the ConceptVuforiaFieldNavigation example instead of this one.
- * NOTE: It is possible to switch between multiple WebCams (eg: one for the left side and one for the right).
- *       For a related example of how to do this, see ConceptTensorFlowObjectDetectionSwitchableCameras
- *
- * When images are located, Vuforia is able to determine the position and orientation of the
- * image relative to the camera.  This sample code then combines that information with a
- * knowledge of where the target images are on the field, to determine the location of the camera.
- *
- * Finally, the location of the camera on the robot is used to determine the
- * robot's location and orientation on the field.
- *
- * To learn more about the FTC field coordinate model, see FTC_FieldCoordinateSystemDefinition.pdf in this folder
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list.
- */
-
-@Autonomous(name="Auto Park", group ="CodeDev")
-public class AutoPark extends OpMode {
+@Autonomous(name="Auto Score Low", group ="CodeDev")
+public class AutoScoreLow extends OpMode {
 
     // the Vision object
     Vision vision;
@@ -144,10 +123,8 @@ public class AutoPark extends OpMode {
 
         Motion.setPower(0.65);
 
-        Motion.moveInches(51);
+        Motion.moveInches(Motion.distanceToInches(36.0, -36.0));
         gripper.grip(Gripper.GripState.GRIP_CLOSED);
-
-
     }
 
     @Override
@@ -182,9 +159,9 @@ public class AutoPark extends OpMode {
                 // have we finished moving?
                 if (Motion.finished()){
                     // then start heading toward the high junction
-                    Motion.headTowardInches(24, 0);
+                    Motion.headTowardInches(48, -24);
                     // and start raising the elevator
-                    elevator.setTargetPosition(32.0);
+                    elevator.setTargetPosition(Elevator.TargetPosition.LOW);
                     state = State.STATE_TURN1;
                 }
                 break;
@@ -193,7 +170,7 @@ public class AutoPark extends OpMode {
                 // we are turning toward the junction and raising the elevator
                 if (Motion.finished() && elevator.finished()) {
                     // Move to center cone over the junction
-                    Motion.moveInches(Motion.distanceToInches(24,0)-10.5);
+                    Motion.moveInches(Motion.distanceToInches(48,-24)-10.5);
 
                     state = State.STATE_DROP;
                 }
@@ -205,8 +182,6 @@ public class AutoPark extends OpMode {
                     // open the gripper
                     gripper.grip(Gripper.GripState.GRIP_OPEN);
 
-                    // and drop the elevator
-                    elevator.setTargetPosition(Elevator.TargetPosition.FLOOR);
                     state = State.STATE_MOVE1;
                 }
                 break;
@@ -215,41 +190,62 @@ public class AutoPark extends OpMode {
                 // wait for the gripper to open
                 if (gripper.finished()){
                     // and then back up
-                    Motion.moveInches(-Motion.distanceToInches(36,-12));
-                    state= State.STATE_TURN2;
+                    Motion.moveInches(-5);
 
-                    state= State.STATE_END;
+                    // and drop the elevator (while backing to minimize hance
+                    elevator.setTargetPosition(Elevator.TargetPosition.FLOOR);
+
+                    state= State.STATE_TURN2;
                 }
                 break;
 
             case STATE_TURN2:
+                // finished backing up?
                 if (Motion.finished()){
-                    Motion.headTowardInches(72, -12);
+                    // turn more than needed to help the camera see.
+                    Motion.headTowardInches(72, -48);
                     state = State.STATE_MOVE2;
                 }
                 break;
             case STATE_MOVE2:
                 if (Motion.finished()){
-                    Motion.moveInches(Motion.distanceToInches(60,-12));
+                    // set pose if available...
+
+                    // head toward the Zone 1, 2, 3
+                    Motion.headTowardInches(72, -36);
                     state=State.STATE_MOVE3;
                 }
                 break;
             case STATE_MOVE3:
+                // finished turning?
                 if (Motion.finished()){
-                    Motion.moveInches(-Motion.distanceToInches(12,-12));
+                    // move to Zone 1
+                    // Motion.moveInches(-Motion.distanceToInches(12,-36));
+                    // Move to Zone 2
+                    // Motion.moveInches(-Motion.distanceToInches(36, -36));
+                    // Move to Zone 3
+                    Motion.moveInches(Motion.distanceToInches(60, -36));
                     state= State.STATE_TURN3;
                 }
                 break;
             case STATE_TURN3:
+                // finished moving?
                 if (Motion.finished()){
-                    Motion.headTowardInches(0, -24);
+                    // Finish for Zone 1
+                    // Motion.headTowardInches(12, -72);
+                    // Finish for Zone 2
+                    // Motion.headTowardInches(36, -72);
+                    // Finish for Zone 3
+                    Motion.headTowardInches(60, -72);
                     state = State.STATE_MOVE4;
                 }
                 break;
             case STATE_MOVE4:
                 if (Motion.finished()){
-                    Motion.moveInches(Motion.distanceToInches(0,-24)-9);
+                    // we be done?
+                    Motion.moveInches(-5.0);
                     state= State.STATE_MOVE5;
+                    state = State.STATE_END;
                 }
                 break;
             case STATE_MOVE5:
