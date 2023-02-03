@@ -1,8 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import static com.qualcomm.robotcore.hardware.MotorControlAlgorithm.LegacyPID;
+import static com.qualcomm.robotcore.hardware.MotorControlAlgorithm.PIDF;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.MotorControlAlgorithm;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 public class Elevator {
     DcMotorEx motorElevator;
@@ -20,23 +25,33 @@ public class Elevator {
     private static final double ticksPerInch = 288.0 / (Math.PI * diameterCapstan);
 
     /** create an Elevator */
-    public Elevator (HardwareMap hardwareMap) {
+    public Elevator (HardwareMap hardwareMap, boolean resetEncoder) {
         motorElevator = hardwareMap.get(DcMotorEx.class, "elevator");
+        LogDevice.dump("elevator", motorElevator);
 
-        // make sure the motor does not move
+         // make sure the motor does not move
         setPower(0.0);
 
-        // TODO: only reset on Autonomous Routine
-        // reset the encoder (should use a limit switch)
-        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        // Only reset during an Autonomous Routine
+        if (resetEncoder) {
+            // reset the encoder (should use a limit switch)
+            setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        }
 
         // set the desired position
         setTargetPosition(0.0);
 
-        // setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // Set some reasonable PID coefficients
+        // The original PID settings:
+        //   PIDF(rue) =  10.0, 3.0, 0.0, 0.0 algorithm: LegacyPID
+        //   PIDF(r2p) =  10.0, 0.0500030517578125, 0.0, 0.0 algorithm: LegacyPID
+        PIDFCoefficients pidfRUE = new PIDFCoefficients(10.0, 3.0, 0.0, 0.0, LegacyPID);
+        // I must cut P to 0.5
+        PIDFCoefficients pidfR2P = new PIDFCoefficients(10.0, 0.05, 0.0, 0.0, LegacyPID);
 
-        // running to position overruns at power level 1...
-        // TODO: should set some reasonable PID coefficients
+        motorElevator.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRUE);
+        motorElevator.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfR2P);
+
         setMode(DcMotor.RunMode.RUN_TO_POSITION);
         setPower(1.0);
     }
@@ -75,6 +90,13 @@ public class Elevator {
     public enum TargetPosition {
         /** position on the floor for picking up cones */
         FLOOR(0.0),
+        // cone stack heights increase by 1.375 inches
+        STACK0(1.375 * 0),
+        STACK1(1.375 * 1),
+        STACK2(1.375 * 2),
+        STACK3(1.375 * 3),
+        STACK4(1.375 * 4),
+
         /** ground junctions are 0.625 high */
         GROUND( 2.0),
         /** low junction is 13.5 inches */

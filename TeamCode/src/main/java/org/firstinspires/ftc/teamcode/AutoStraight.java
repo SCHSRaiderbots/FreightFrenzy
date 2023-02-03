@@ -54,7 +54,7 @@ public class AutoStraight extends OpMode {
         PowerPlay.init();
 
         // the elevator
-        elevator = new Elevator(hardwareMap);
+        elevator = new Elevator(hardwareMap, true);
 
         // the gripper
         gripper = new Gripper(hardwareMap);

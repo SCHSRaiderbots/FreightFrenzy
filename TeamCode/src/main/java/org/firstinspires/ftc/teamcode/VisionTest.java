@@ -73,7 +73,7 @@ public class VisionTest extends OpMode {
         LogDevice.dumpFirmware(hardwareMap);
 
         // create the elevator
-        elevator = new Elevator(hardwareMap);
+        elevator = new Elevator(hardwareMap, true);
         gripper= new Gripper(hardwareMap);
 
         // create the vision object

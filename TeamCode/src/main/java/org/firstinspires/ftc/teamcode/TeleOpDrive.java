@@ -56,8 +56,8 @@ public class TeleOpDrive extends OpMode {
         // report the LynxModules
         LogDevice.dumpFirmware(hardwareMap);
 
-        // create the elevator
-        elevator = new Elevator(hardwareMap);
+        // create the elevator (keeping encoder values from autonomous)
+        elevator = new Elevator(hardwareMap, false);
         // create the gripper
         gripper= new Gripper(hardwareMap);
 
@@ -190,7 +190,7 @@ public class TeleOpDrive extends OpMode {
         }
 
         // now adjust the target position
-        double delta = 5.0 * (-gamepad1.left_trigger + gamepad1.right_trigger);
+        double delta = 6.0 * (-gamepad1.left_trigger + gamepad1.right_trigger);
         elevator.setTargetPosition(heightElevator + delta);
 
         // left bumper closes the grip

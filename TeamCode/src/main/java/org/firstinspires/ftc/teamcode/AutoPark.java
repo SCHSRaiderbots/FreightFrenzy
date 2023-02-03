@@ -68,7 +68,7 @@ public class AutoPark extends OpMode {
         // create the vision object
         vision = new Vision();
 
-        elevator = new Elevator(hardwareMap);
+        elevator = new Elevator(hardwareMap, true);
 
         // init the Vuforia localization engine
         vision.initVuforia(hardwareMap);
