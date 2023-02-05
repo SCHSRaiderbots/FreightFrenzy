@@ -41,12 +41,13 @@ public class Elevator {
         // set the desired position
         setTargetPosition(0.0);
 
-        // Set some reasonable PID coefficients
+        // TODO: Set some reasonable PID coefficients
         // The original PID settings:
         //   PIDF(rue) =  10.0, 3.0, 0.0, 0.0 algorithm: LegacyPID
         //   PIDF(r2p) =  10.0, 0.0500030517578125, 0.0, 0.0 algorithm: LegacyPID
         PIDFCoefficients pidfRUE = new PIDFCoefficients(10.0, 3.0, 0.0, 0.0, LegacyPID);
-        // I must cut P to 0.5
+        // I must cut P to 0.5 to avoid overshoot.
+        // Not happy, so just revert to original values.
         PIDFCoefficients pidfR2P = new PIDFCoefficients(10.0, 0.05, 0.0, 0.0, LegacyPID);
 
         motorElevator.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRUE);

@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.teamcode.Motion.robot;
+import static org.firstinspires.ftc.teamcode.Vision.Signal.SIGNAL1;
+import static org.firstinspires.ftc.teamcode.Vision.Signal.SIGNAL3;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -18,29 +20,57 @@ public class AutoScoreLow extends OpMode {
 
     // the gripper
     Gripper gripper;
-    /** the LynxModule serial number */
-    String strSerialNumber;
 
     enum State {
         STATE_START,
+        STATE_SECOND,
         STATE_TURN1,
         STATE_MOVE1,
-        STATE_BACK,
         STATE_DROP,
         STATE_TURN2,
         STATE_MOVE2,
         STATE_TURN3,
         STATE_MOVE3,
-        STATE_TURN4,
         STATE_MOVE4,
-        STATE_MOVE5,
-        STATE_MOVE6,
-        STATE_END,
-        STATE_PARK
+        STATE_READ_NAV,
+        STATE_END
     }
     State state= State.STATE_START;
 
+    // mapping routines
+    double xMap (double tileX) {
+        if (PowerPlay.alliance == PowerPlay.Alliance.RED && PowerPlay.startPos == PowerPlay.StartPos.RIGHT ||
+            PowerPlay.alliance == PowerPlay.Alliance.BLUE && PowerPlay.startPos == PowerPlay.StartPos.LEFT) {
+            return tileX;
+        } else {
+            return -tileX;
+        }
+    }
 
+    double yMap (double tileY) {
+        if (PowerPlay.alliance == PowerPlay.Alliance.RED) {
+            return tileY;
+        } else {
+            return -tileY;
+        }
+    }
+
+    void MappedHeadToward(double tileX, double tileY) {
+        // figure the mapped position
+        double tx = xMap(tileX);
+        double ty = yMap(tileY);
+
+        // head toward that position
+        Motion.headTowardTiles(tx, ty);
+    }
+
+    double MappedDistance(double tileX, double tileY) {
+        // figure the mapped position in tiles
+        double tx = xMap(tileX);
+        double ty = yMap(tileY);
+
+        return Motion.distanceToTiles(tx, ty);
+    }
 
     @Override
     public void init() {
@@ -79,6 +109,19 @@ public class AutoScoreLow extends OpMode {
         robot = Motion.Robot.ROBOT_2022;
         Motion.init(hardwareMap);
 
+        // run using position
+        Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // at 0.65, I slip (even with water bottle)
+        // at 0.60, a little slipping
+        // at 0.50, 15 seconds left for park at Zone 2
+        // at 0.45, 12 seconds (Motion.finished() delay reduced to 20 calls)
+        // at 0.40, 11 seconds left for park at Zone 3
+        // at 0.30, 06 seconds left for park at Zone 3
+        // at 0.10, do not finish
+        // turning left at 0.45 is not so good, so try less
+        Motion.setPower(0.35);
+
         // set the initial position
         PowerPlay.init();
     }
@@ -100,7 +143,33 @@ public class AutoScoreLow extends OpMode {
         telemetry.addData("Signal", vision.signal);
 
         // set the alliance and start position
+        // position is only set if there are DPAD changes
         PowerPlay.init_loop(telemetry, gamepad1);
+
+        // TODO: Debugging
+        telemetry.addData("x,y position", "(%6.3f, %6.3f)", xMap(1.5), yMap(-1.5));
+        telemetry.addData("distance", MappedDistance(1.5, -1.5));
+
+        if (gamepad2.dpad_right) {
+            if (!Motion.finished()) {
+                Motion.turnDegrees(-90.0);
+            }
+        }
+        if (gamepad2.dpad_left) {
+            if (!Motion.finished()) {
+                Motion.turnDegrees(90.0);
+            }
+        }
+        if (gamepad2.dpad_up) {
+            if (!Motion.finished()) {
+                Motion.moveInches(24.0);
+            }
+        }
+        if (gamepad2.dpad_down) {
+            if (!Motion.finished()) {
+                Motion.moveInches(-24.0);
+            }
+        }
     }
 
     @Override
@@ -118,13 +187,20 @@ public class AutoScoreLow extends OpMode {
             vision.targets.activate();
         }
 
-        // run using position
-        Motion.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        // The SIGNAL is not symmetric.
+        // As a HACK, map the signal when on the Left side
+        if (PowerPlay.startPos == PowerPlay.StartPos.LEFT) {
+            switch (vision.signal) {
+                case SIGNAL1:
+                    vision.signal = SIGNAL3;
+                    break;
+                case SIGNAL3:
+                    vision.signal = SIGNAL1;
+            }
+        }
 
-        Motion.setPower(0.65);
-
-        Motion.moveInches(Motion.distanceToInches(36.0, -36.0));
-        gripper.grip(Gripper.GripState.GRIP_CLOSED);
+        // and make sure we are in the starting state
+        state = State.STATE_START;
     }
 
     @Override
@@ -139,10 +215,11 @@ public class AutoScoreLow extends OpMode {
         // report targets in view
         vision.reportTracking(telemetry);
 
+        // report status of the two subsystems
         telemetry.addData("Motion Finished", Motion.finished());
         telemetry.addData("Elevator finished", elevator.finished());
-        telemetry.addData("Elevator delta", (elevator.getTargetPosition() - elevator.getCurrentPosition()));
 
+        // TODO: remove this
         if (gamepad1.y) {
             // set the pose
             Motion.setPoseInches(Vision.inchX, Vision.inchY, Vision.degTheta);
@@ -151,33 +228,48 @@ public class AutoScoreLow extends OpMode {
         // dispatch on state
         switch (state) {
             case STATE_START:
-                // wait for the gripper to close
+                // The initial move...
+
+                // Start moving the robot.
+                Motion.moveTiles(MappedDistance(1.5, -1.5));
+
+                // close the gripper to grab the cone
+                gripper.grip(Gripper.GripState.GRIP_CLOSED);
+
+                state = State.STATE_SECOND;
+                break;
+
+            case STATE_SECOND:
+                // we are moving to the first waypoint
+                // wait for the gripper to close, thn start lifting...
                 if (gripper.finished()){
                     // and then start raising the elevator
                     elevator.setTargetPosition(10.0);
                 }
                 // have we finished moving?
                 if (Motion.finished()){
-                    // then start heading toward the high junction
-                    Motion.headTowardInches(48, -24);
-                    // and start raising the elevator
+                    // then start heading toward the target junction
+                    MappedHeadToward(2.0, -1.0);
+
+                    // and start raising the elevator for that junction
                     elevator.setTargetPosition(Elevator.TargetPosition.LOW);
                     state = State.STATE_TURN1;
                 }
                 break;
 
             case STATE_TURN1:
-                // we are turning toward the junction and raising the elevator
+                // we are turning toward the target junction and raising the elevator
                 if (Motion.finished() && elevator.finished()) {
                     // Move to center cone over the junction
-                    Motion.moveInches(Motion.distanceToInches(48,-24)-10.5);
+                    // TODO: Use a variable for the distance
+                    Motion.moveTiles(MappedDistance(2.0, -1.0) - (10.5/24.0));
 
                     state = State.STATE_DROP;
                 }
                 break;
 
             case STATE_DROP:
-                // when we get to the  junction
+                // we are approaching the junction.
                 if (Motion.finished()){
                     // open the gripper
                     gripper.grip(Gripper.GripState.GRIP_OPEN);
@@ -187,12 +279,12 @@ public class AutoScoreLow extends OpMode {
                 break;
 
             case STATE_MOVE1:
-                // wait for the gripper to open
+                // waiting for the gripper to open and cone to drop
                 if (gripper.finished()){
-                    // and then back up
+                    // back up to get away from junction
                     Motion.moveInches(-5);
 
-                    // and drop the elevator (while backing to minimize hance
+                    // drop the elevator (while backing to minimize gripper dropping on terminal)
                     elevator.setTargetPosition(Elevator.TargetPosition.FLOOR);
 
                     state= State.STATE_TURN2;
@@ -200,86 +292,93 @@ public class AutoScoreLow extends OpMode {
                 break;
 
             case STATE_TURN2:
-                // finished backing up?
+                // we are backing up
                 if (Motion.finished()){
                     // turn more than needed to help the camera see.
-                    Motion.headTowardInches(72, -48);
+                    double deltaTurn = (PowerPlay.startPos == PowerPlay.StartPos.RIGHT) ? -0.5 : 0.5;
+                    MappedHeadToward(3.0, -1.5 + deltaTurn);
                     state = State.STATE_MOVE2;
                 }
                 break;
+
             case STATE_MOVE2:
+                // We are pointing the robot so we can read the Navigation Target
                 if (Motion.finished()){
                     // set pose if available...
 
-                    // head toward the Zone 1, 2, 3
-                    Motion.headTowardInches(72, -36);
-                    state=State.STATE_MOVE3;
+                    state=State.STATE_READ_NAV;
                 }
                 break;
+
+            case STATE_READ_NAV:
+                // we are trying to read the navigation target
+
+                // straighten out to head toward the Zone 1, 2, 3
+                MappedHeadToward(3.0, -1.5);
+
+                // park in the appropriate Zone
+                state = State.STATE_MOVE3;
+                break;
+
             case STATE_MOVE3:
-                // finished turning?
+                // We are turning to be perpendicular to the wall
                 if (Motion.finished()){
-                    // move to Zone 1
-                    // Motion.moveInches(-Motion.distanceToInches(12,-36));
-                    // Move to Zone 2
-                    // Motion.moveInches(-Motion.distanceToInches(36, -36));
-                    // Move to Zone 3
-                    Motion.moveInches(Motion.distanceToInches(60, -36));
+
+                    // now move to the appropriate x position for the Zone
+                    switch (vision.signal) {
+                        case SIGNAL1:
+                            // Motion.moveInches(-Motion.distanceToInches(12,-36));
+                            Motion.moveTiles(-MappedDistance(0.5, -1.5));
+                            break;
+                        case SIGNAL2:
+                            // Motion.moveInches(-Motion.distanceToInches(36, -36));
+                            Motion.moveTiles(-MappedDistance(1.5, -1.5));
+                            break;
+                        case SIGNAL3:
+                            // Motion.moveInches(Motion.distanceToInches(60, -36));
+                            Motion.moveTiles(MappedDistance(2.5, -1.5));
+                            break;
+                    }
                     state= State.STATE_TURN3;
                 }
                 break;
+
             case STATE_TURN3:
-                // finished moving?
+                // finished moving to Zone x position?
                 if (Motion.finished()){
-                    // Finish for Zone 1
-                    // Motion.headTowardInches(12, -72);
-                    // Finish for Zone 2
-                    // Motion.headTowardInches(36, -72);
-                    // Finish for Zone 3
-                    Motion.headTowardInches(60, -72);
+                    switch (vision.signal) {
+                        // turn to the alliance wall
+                        case SIGNAL1:
+                            // Motion.headTowardInches(12, -72);
+                            MappedHeadToward(0.5, -3.0);
+                            break;
+                        case SIGNAL2:
+                            // Motion.headTowardInches(36, -72);
+                            MappedHeadToward(1.5, -3.0);
+                            break;
+                        case SIGNAL3:
+                            // Motion.headTowardInches(60, -72);
+                            MappedHeadToward(2.5, -3.0);
+                            break;
+                    }
                     state = State.STATE_MOVE4;
                 }
                 break;
+
             case STATE_MOVE4:
+                // we are turning to the alliance wall
                 if (Motion.finished()){
-                    // we be done?
+                    // Now back up a bit so the claw does not hang over the Zone
                     Motion.moveInches(-5.0);
-                    state= State.STATE_MOVE5;
+
                     state = State.STATE_END;
                 }
                 break;
-            case STATE_MOVE5:
-                if (Motion.finished()){
-                    Motion.moveInches(-Motion.distanceToInches(0,-24));
-                    state= State.STATE_TURN4;
-                }
-                break;
-            case STATE_TURN4:
-                if (Motion.finished()){
-                    Motion.headTowardInches(72, -12);
-                    state = State.STATE_MOVE6;
-                }
-                break;
-            case STATE_MOVE6:
-                if (Motion.finished()){
-                    Motion.moveInches(Motion.distanceToInches(60,-12));
-                    state= State.STATE_END;
-                }
-                break;
+
             case STATE_END:
-                if (Motion.finished()){
-
-                }
+                // do nothing
                 break;
-
-
         }
-
-
-
-
-
-        // Motion.setPower(forward+turn, forward-turn);
     }
 
     @Override

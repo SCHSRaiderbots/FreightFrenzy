@@ -68,10 +68,8 @@ public class TeleOpDrive extends OpMode {
         vision.initVuforia(hardwareMap);
 
         // init tracking
-        // TODO: does not play well with others...
         vision.initTracking();
 
-        // we do not need an object detector...
         // build an object detector
         vision.initTfod(hardwareMap);
 
@@ -120,7 +118,6 @@ public class TeleOpDrive extends OpMode {
 
         // report targets in view
         vision.reportTracking(telemetry);
-
     }
 
     @Override
@@ -149,20 +146,17 @@ public class TeleOpDrive extends OpMode {
 
         // now process the controls...
 
-        // do some driving
-        double forw = -0.7 * boost(gamepad1.left_stick_y);
+        // do some driving was -0.7
+        // The minus sign is because stick pushed forward is negative.
+        double forward = -1.0 * boost(gamepad1.left_stick_y);
         double turn = 0.4 * (gamepad1.right_stick_x);
 
-        Motion.setPower(forw+turn, forw-turn);
+        Motion.setPower(forward+turn, forward-turn);
 
         if (gamepad1.y) {
             // set the pose
             Motion.setPoseInches(Vision.inchX, Vision.inchY, Vision.degTheta);
         }
-
-        // the elevator controls
-        double p = gamepad1.left_trigger - gamepad1.right_trigger;
-        // elevator.setPower(p);
 
         if (gamepad1.a) {
             elevator.setTargetPosition(Elevator.TargetPosition.FLOOR);
@@ -172,23 +166,43 @@ public class TeleOpDrive extends OpMode {
             elevator.setTargetPosition(10.0);
             heightElevator = elevator.getTargetPosition();
         }
-        if (gamepad1.dpad_down) {
-            elevator.setTargetPosition(Elevator.TargetPosition.GROUND);
-            heightElevator = elevator.getTargetPosition();
-        }
-        if (gamepad1.dpad_left) {
-            elevator.setTargetPosition(Elevator.TargetPosition.LOW);
-            heightElevator = elevator.getTargetPosition();
-        }
-        if (gamepad1.dpad_right) {
-            elevator.setTargetPosition(Elevator.TargetPosition.MEDIUM);
-            heightElevator = elevator.getTargetPosition();
-        }
-        if (gamepad1.dpad_up) {
-            elevator.setTargetPosition(Elevator.TargetPosition.HIGH);
-            heightElevator = elevator.getTargetPosition();
-        }
 
+        // have a mode based on x
+        if (!gamepad1.x) {
+            if (gamepad1.dpad_down) {
+                elevator.setTargetPosition(Elevator.TargetPosition.GROUND);
+                heightElevator = elevator.getTargetPosition();
+            }
+            if (gamepad1.dpad_left) {
+                elevator.setTargetPosition(Elevator.TargetPosition.LOW);
+                heightElevator = elevator.getTargetPosition();
+            }
+            if (gamepad1.dpad_right) {
+                elevator.setTargetPosition(Elevator.TargetPosition.MEDIUM);
+                heightElevator = elevator.getTargetPosition();
+            }
+            if (gamepad1.dpad_up) {
+                elevator.setTargetPosition(Elevator.TargetPosition.HIGH);
+                heightElevator = elevator.getTargetPosition();
+            }
+        } else {
+            if (gamepad1.dpad_down) {
+                elevator.setTargetPosition(Elevator.TargetPosition.STACK1);
+                heightElevator = elevator.getTargetPosition();
+            }
+            if (gamepad1.dpad_left) {
+                elevator.setTargetPosition(Elevator.TargetPosition.STACK2);
+                heightElevator = elevator.getTargetPosition();
+            }
+            if (gamepad1.dpad_right) {
+                elevator.setTargetPosition(Elevator.TargetPosition.STACK3);
+                heightElevator = elevator.getTargetPosition();
+            }
+            if (gamepad1.dpad_up) {
+                elevator.setTargetPosition(Elevator.TargetPosition.STACK4);
+                heightElevator = elevator.getTargetPosition();
+            }
+        }
         // now adjust the target position
         double delta = 6.0 * (-gamepad1.left_trigger + gamepad1.right_trigger);
         elevator.setTargetPosition(heightElevator + delta);
@@ -202,7 +216,7 @@ public class TeleOpDrive extends OpMode {
         if (gamepad1.right_bumper){
             gripper.grip(Gripper.GripState.GRIP_OPEN);
 
-            // if I open the gripper, send it to the groun
+            // if I open the gripper, send the elevator to the ground
             elevator.setTargetPosition(Elevator.TargetPosition.FLOOR);
             heightElevator = elevator.getTargetPosition();
         }
@@ -210,7 +224,7 @@ public class TeleOpDrive extends OpMode {
 
     /**
      * Square a value retaining the sign
-     * @param x
+     * @param x value from -1 to 1
      * @return x * abs(x)
      */
     private double boost(double x) {
@@ -275,7 +289,7 @@ public class TeleOpDrive extends OpMode {
                 });
 
         telemetry.addLine()
-                .addData("grvty", new Func<String>() {
+                .addData("gravity", new Func<String>() {
                     @Override public String value() {
                         return gravity.toString();
                     }

@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.Motion.robot;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -41,6 +42,7 @@ import java.util.Locale;
  */
 
 @TeleOp(name="Vuforia Field Nav", group ="CodeDev")
+@Disabled
 public class VisionTest extends OpMode {
 
     // the Elevator

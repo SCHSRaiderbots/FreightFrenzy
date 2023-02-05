@@ -663,20 +663,30 @@ public class Motion {
      * Test if motors have reached their target.
      * @return true if both drive motors are close to target
      */
+    static int fudgeCounter = 40;
     static boolean finished() {
         // if either motor is busy, return false
-        if (dcmotorLeft.isBusy() ||  dcmotorRight.isBusy())
+        if (dcmotorLeft.isBusy() ||  dcmotorRight.isBusy()) {
+            // if stuff is busy, then reset the counter
+            fudgeCounter = 20;
             return false;
+        }
         else {
             // robot reached the position!
 
-            // log the position at the instant of success
-            Log.d("Motion.finished()",
-                    String.format("Pose (%.02f, %.02f) inches, heading %.01f degrees",
-                            Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees));
+            if (fudgeCounter <= 0) {
 
-            // return true
-            return true;
+                // log the position at the instant of success
+                Log.d("Motion.finished()",
+                        String.format("Pose (%.02f, %.02f) inches, heading %.01f degrees",
+                                Motion.xPoseInches, Motion.yPoseInches, Motion.thetaPoseDegrees));
+
+                // return true
+                return true;
+            } else {
+                fudgeCounter --;
+                return false;
+            }
         }
     }
 
@@ -820,6 +830,20 @@ public class Motion {
         // currently at (xPoseInches, yPoseInches)
         // d = sqrt((x1 -x2)^2 + (y1-y2)^2 )
         return Math.hypot(x-xPoseInches, y-yPoseInches);
+    }
+
+    /**
+     * Find the distance in tiles to a position
+     * @param xTiles position's x in tiles
+     * @param yTiles position's y in tiles
+     * @return distance in tiles
+     */
+    static double distanceToTiles(double xTiles, double yTiles) {
+        double xMeters = xTiles * metersPerTile;
+        double yMeters = yTiles * metersPerTile;
+
+        // compute the distance in meters and then convert to tiles
+        return Math.hypot(xMeters - xPose, yMeters - yPose) / metersPerTile;
     }
 
     static void reportPosition(Telemetry telemetry) {

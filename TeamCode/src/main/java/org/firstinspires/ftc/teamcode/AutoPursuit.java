@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.Motion.metersPerTile;
 import static org.firstinspires.ftc.teamcode.Motion.robot;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -31,6 +32,7 @@ import android.util.Log;
  */
 
 @Autonomous(name="Auto Pursuit", group ="CodeDev")
+@Disabled
 public class AutoPursuit extends OpMode {
 
     // the Vision object

@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import static org.firstinspires.ftc.teamcode.Motion.robot;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -30,6 +31,7 @@ import android.util.Log;
  */
 
 @Autonomous(name="Auto Park", group ="CodeDev")
+@Disabled
 public class AutoPark extends OpMode {
 
     // the Vision object

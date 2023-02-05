@@ -4,12 +4,14 @@ import static org.firstinspires.ftc.teamcode.Motion.robot;
 import static org.firstinspires.ftc.teamcode.Motion.setVelocity;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import android.util.Log;
 
 @Autonomous(name="Auto Straight", group ="CodeDev")
+@Disabled
 public class AutoStraight extends OpMode {
     // the elevator
     Elevator elevator;

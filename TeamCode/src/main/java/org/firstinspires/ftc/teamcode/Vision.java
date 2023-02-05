@@ -201,7 +201,7 @@ public class Vision {
 
     enum Signal {SIGNAL1, SIGNAL2, SIGNAL3}
     // game should start with SIGNAL1 showing
-    public Signal signal = Signal.SIGNAL1;
+    public Signal signal = Signal.SIGNAL3;
 
 
     public void readSignal() {
