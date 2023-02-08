@@ -30,6 +30,9 @@ public class TeleOpDrive extends OpMode {
     double heightElevator = 0.0;
 
     Gripper gripper;
+    /** we are attacking the cone stack */
+    boolean bConeStack = false;
+    boolean bGripStack = false;
 
     // the Vision object
     Vision vision;
@@ -172,35 +175,43 @@ public class TeleOpDrive extends OpMode {
             if (gamepad1.dpad_down) {
                 elevator.setTargetPosition(Elevator.TargetPosition.GROUND);
                 heightElevator = elevator.getTargetPosition();
+                bConeStack = false;
             }
             if (gamepad1.dpad_left) {
                 elevator.setTargetPosition(Elevator.TargetPosition.LOW);
                 heightElevator = elevator.getTargetPosition();
+                bConeStack = false;
             }
             if (gamepad1.dpad_right) {
                 elevator.setTargetPosition(Elevator.TargetPosition.MEDIUM);
                 heightElevator = elevator.getTargetPosition();
+                bConeStack = false;
             }
             if (gamepad1.dpad_up) {
                 elevator.setTargetPosition(Elevator.TargetPosition.HIGH);
                 heightElevator = elevator.getTargetPosition();
+                bConeStack = false;
             }
         } else {
             if (gamepad1.dpad_down) {
                 elevator.setTargetPosition(Elevator.TargetPosition.STACK1);
                 heightElevator = elevator.getTargetPosition();
+                bConeStack = true;
             }
             if (gamepad1.dpad_left) {
                 elevator.setTargetPosition(Elevator.TargetPosition.STACK2);
                 heightElevator = elevator.getTargetPosition();
+                bConeStack = true;
             }
             if (gamepad1.dpad_right) {
                 elevator.setTargetPosition(Elevator.TargetPosition.STACK3);
                 heightElevator = elevator.getTargetPosition();
+                bConeStack = true;
             }
             if (gamepad1.dpad_up) {
                 elevator.setTargetPosition(Elevator.TargetPosition.STACK4);
                 heightElevator = elevator.getTargetPosition();
+                bConeStack = true;
             }
         }
         // now adjust the target position
@@ -210,6 +221,22 @@ public class TeleOpDrive extends OpMode {
         // left bumper closes the grip
         if (gamepad1.left_bumper){
             gripper.grip(Gripper.GripState.GRIP_CLOSED);
+
+            // were we attacking the cone stack?
+            if (bConeStack) {
+                bConeStack = false;
+                bGripStack = true;
+            }
+        }
+
+        // if we are gripping the cone stack, raise the elevator
+        if (bGripStack && gripper.finished()) {
+            // the attack is finished
+            bConeStack = false;
+            bGripStack = false;
+
+            // raise the elevator to clear the stack
+            heightElevator = 15.0;
         }
 
         // right bumper opens
